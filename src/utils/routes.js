@@ -1,4 +1,8 @@
-export default {
-    HOME: 'Home',
-    PROFILE: 'Profile'
+const ROUTES = {
+  LOGIN: 'Login',
+  REGISTER: 'Register',
+  HOME: 'Home',
+  PROFILE: 'Profile',
 };
+
+export default ROUTES;

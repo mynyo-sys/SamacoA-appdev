@@ -1,13 +1,12 @@
 import React from 'react';
-import { View } from 'react-native';
-
-import AppNav from './src/navigations';
+import { NavigationContainer } from '@react-navigation/native';
+import AuthNav from './src/navigations/AuthNav'; // or MainNav if you want to go directly to Home
 
 const App = () => {
   return (
-    <View style={{ flex: 1 }}>
-      <AppNav />
-    </View>
+    <NavigationContainer>
+      <AuthNav />
+    </NavigationContainer>
   );
 };
 

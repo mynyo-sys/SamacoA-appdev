@@ -1,23 +1,16 @@
-import { Image, Text, View } from 'react-native';
-import { IMG } from '../utils';
+import { Text, View, Button } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
 const ProfileScreen = () => {
+  const navigation = useNavigation();
+
   return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 3,
-        borderColor: 'blue',
-      }}
-    >
-      <Image
-        source={{
-          uri: IMG.LOGO,
-        }}
-        style={{ width: 200, height: 200 }}
-      />
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ fontSize: 40 }}>ProfileScreen</Text>
+      <Button
+        title="Go back to Home"
+        onPress={() => navigation.goBack()}
+      />
     </View>
   );
 };
