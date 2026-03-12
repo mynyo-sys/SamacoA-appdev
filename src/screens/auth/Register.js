@@ -1,18 +1,55 @@
-import { useState } from 'react';
-import { Alert, Text, TouchableOpacity, View } from 'react-native';
+import { useState, useEffect } from 'react';
+import { Alert, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
 import { ROUTES } from '../../utils';
+import { REGISTER_REQUEST } from '../../app/reducers/authReducer';
 
 const Register = () => {
-  const [name, setName] = useState('');
   const [emailAdd, setEmailAdd] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const navigation = useNavigation();
+  const dispatch = useDispatch();
+  const { isLoading, error, registerSuccess } = useSelector(state => state.auth || {});
+
+  // Handle registration success
+  useEffect(() => {
+    if (registerSuccess) {
+      Alert.alert('Success', 'Registration successful! Please login.');
+      navigation.navigate(ROUTES.LOGIN);
+    }
+  }, [registerSuccess, navigation]);
+
+  // Handle registration error
+  useEffect(() => {
+    if (error) {
+      Alert.alert('Registration Failed', error);
+    }
+  }, [error]);
+
+  const handleRegister = () => {
+    // Validate inputs
+    if (emailAdd === '' || password === '' || confirmPassword === '') {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    // Dispatch Redux action
+    dispatch({ 
+      type: REGISTER_REQUEST, 
+      payload: { email: emailAdd, password } 
+    });
+  };
 
   return (
     <View
@@ -25,25 +62,12 @@ const Register = () => {
     >
       <View style={{ width: '100%' }}>
         <CustomTextInput
-          label={'Full Name'}
-          placeholder={'Enter Full Name'}
-          value={name}
-          onChangeText={setName}
-          containerStyle={{
-            padding: 5,
-          }}
-          textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
-            fontWeight: 'bold',
-          }}
-        />
-        <CustomTextInput
           label={'Email Address'}
           placeholder={'Enter Email Address'}
           value={emailAdd}
           onChangeText={setEmailAdd}
+          keyboardType="email-address"
+          autoCapitalize="none"
           containerStyle={{
             padding: 5,
           }}
@@ -87,9 +111,9 @@ const Register = () => {
       </View>
 
       <CustomButton
-        label={'REGISTER'}
+        label={isLoading ? "REGISTERING..." : "REGISTER"}
         containerStyle={{
-          backgroundColor: 'green',
+          backgroundColor: isLoading ? 'gray' : 'green',
           borderRadius: 10,
           marginVertical: 20,
           width: '80%',
@@ -98,20 +122,11 @@ const Register = () => {
           color: 'white',
           fontWeight: 'bold',
         }}
-        onPress={() => {
-          if (name === '' || emailAdd === '' || password === '' || confirmPassword === '') {
-            Alert.alert('Error', 'Please fill in all fields');
-            return;
-          }
-          if (password !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match');
-            return;
-          }
-          // Add your registration logic here
-          Alert.alert('Success', 'Registration successful!');
-          navigation.navigate(ROUTES.LOGIN);
-        }}
-      />
+        onPress={handleRegister}
+        disabled={isLoading}
+      >
+        {isLoading && <ActivityIndicator color="white" />}
+      </CustomButton>
 
       <View
         style={{
