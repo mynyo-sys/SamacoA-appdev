@@ -25,21 +25,21 @@ const Login = () => {
     }
   }, [error]);
 
-  // Navigate to home when authenticated
+  //log when authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigation.navigate(ROUTES.HOME); // Make sure you have HOME route defined
-    }
-  }, [isAuthenticated, navigation]);
+      if (isAuthenticated) {
+        console.log('User authenticated successfully!');
+      }
+    }, [isAuthenticated]);
 
-  const handleLogin = () => {
-    if (emailAdd === '' || password === '') {
-      Alert.alert(
-        'Invalid Credentials',
-        'Please enter valid email address and password',
-      );
-      return;
-    }
+    const handleLogin = () => {
+      if (emailAdd === '' || password === '') {
+        Alert.alert(
+          'Invalid Credentials',
+          'Please enter valid email address and password',
+        );
+        return;
+      }
     
     // Dispatch login action
     dispatch({ 
