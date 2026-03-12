@@ -18,34 +18,50 @@ const Login = () => {
   // Get loading, error, and auth state from Redux
   const { isLoading, error, isAuthenticated } = useSelector(state => state.auth);
 
+  // Log when Login screen loads
+  console.log('[SCREEN] Login screen loaded');
+
   // Show error alert when error changes
   useEffect(() => {
     if (error) {
+      console.log(`[ERROR] Login failed: ${error}`);
       Alert.alert('Login Failed', error);
     }
   }, [error]);
 
-  //log when authenticated
+  // Log when authenticated
   useEffect(() => {
-      if (isAuthenticated) {
-        console.log('User authenticated successfully!');
-      }
-    }, [isAuthenticated]);
+    if (isAuthenticated) {
+      console.log('[SUCCESS] User authenticated successfully');
+    }
+  }, [isAuthenticated]);
 
-    const handleLogin = () => {
-      if (emailAdd === '' || password === '') {
-        Alert.alert(
-          'Invalid Credentials',
-          'Please enter valid email address and password',
-        );
-        return;
-      }
+  const handleLogin = () => {
+    // Log button press with final values
+    console.log('[ACTION] Login button pressed');
+    console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
+
+    if (emailAdd === '' || password === '') {
+      console.log('[VALIDATION] Empty fields detected');
+      Alert.alert(
+        'Invalid Credentials',
+        'Please enter valid email address and password',
+      );
+      return;
+    }
+
+    console.log('[VALIDATION] All fields filled, dispatching LOGIN_REQUEST');
     
     // Dispatch login action
     dispatch({ 
       type: LOGIN_REQUEST, 
       payload: { email: emailAdd, password } 
     });
+  };
+
+  const handleRegisterPress = () => {
+    console.log('[ACTION] Register link pressed');
+    navigation.navigate(ROUTES.REGISTER);
   };
 
   return (
@@ -62,7 +78,7 @@ const Login = () => {
           label={'Email Address'}
           placeholder={'Enter Email Address'}
           value={emailAdd}
-          onChangeText={setEmailAdd}
+          onChangeText={setEmailAdd}  // Back to original
           containerStyle={{
             padding: 5,
           }}
@@ -77,7 +93,7 @@ const Login = () => {
           label={'Password'}
           placeholder={'Enter Password'}
           value={password}
-          onChangeText={setPassword}
+          onChangeText={setPassword}  // Back to original
           secureTextEntry={true}
           containerStyle={{
             padding: 5,
@@ -116,7 +132,7 @@ const Login = () => {
         }}
       >
         <Text>Create an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate(ROUTES.REGISTER)}>
+        <TouchableOpacity onPress={handleRegisterPress}>
           <Text style={{ color: 'red', marginLeft: 10, fontWeight: 'bold' }}>
             Register
           </Text>

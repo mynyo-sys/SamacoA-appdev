@@ -9,8 +9,17 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const { user } = useSelector(state => state.auth);
 
+  console.log('[SCREEN] Home screen loaded');
+
   const handleLogout = () => {
+    console.log('[ACTION] Logout button pressed');
+    console.log(`[USER] Logging out: ${user?.email || 'unknown'}`);
     dispatch({ type: LOGOUT });
+  };
+
+  const handleProfilePress = () => {
+    console.log('[ACTION] Profile button pressed');
+    navigation.navigate('Profile');
   };
 
   return (
@@ -26,7 +35,7 @@ const HomeScreen = () => {
       
       <TouchableOpacity 
         style={styles.profileButton}
-        onPress={() => navigation.navigate('Profile')}
+        onPress={handleProfilePress}
       >
         <Text style={styles.buttonText}>GO TO PROFILE</Text>
       </TouchableOpacity>

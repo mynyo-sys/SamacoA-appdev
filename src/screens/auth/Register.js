@@ -17,9 +17,13 @@ const Register = () => {
   const dispatch = useDispatch();
   const { isLoading, error, registerSuccess } = useSelector(state => state.auth || {});
 
+  // Log when Register screen loads
+  console.log('[SCREEN] Register screen loaded');
+
   // Handle registration success
   useEffect(() => {
     if (registerSuccess) {
+      console.log('[SUCCESS] Registration successful, redirecting to login');
       Alert.alert('Success', 'Registration successful! Please login.');
       navigation.navigate(ROUTES.LOGIN);
     }
@@ -28,27 +32,41 @@ const Register = () => {
   // Handle registration error
   useEffect(() => {
     if (error) {
+      console.log(`[ERROR] Registration failed: ${error}`);
       Alert.alert('Registration Failed', error);
     }
   }, [error]);
 
   const handleRegister = () => {
+    // Log button press with final values
+    console.log('[ACTION] Register button pressed');
+    console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
+
     // Validate inputs
     if (emailAdd === '' || password === '' || confirmPassword === '') {
+      console.log('[VALIDATION] Empty fields detected');
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     if (password !== confirmPassword) {
+      console.log('[VALIDATION] Passwords do not match');
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
+    console.log('[VALIDATION] All fields valid, dispatching REGISTER_REQUEST');
+    
     // Dispatch Redux action
     dispatch({ 
       type: REGISTER_REQUEST, 
       payload: { email: emailAdd, password } 
     });
+  };
+
+  const handleLoginPress = () => {
+    console.log('[ACTION] Login link pressed');
+    navigation.navigate(ROUTES.LOGIN);
   };
 
   return (
@@ -136,7 +154,7 @@ const Register = () => {
         }}
       >
         <Text>Already have an account?</Text>
-        <TouchableOpacity onPress={() => navigation.navigate(ROUTES.LOGIN)}>
+        <TouchableOpacity onPress={handleLoginPress}>
           <Text style={{ color: 'blue', marginLeft: 10, fontWeight: 'bold' }}>
             Login
           </Text>
