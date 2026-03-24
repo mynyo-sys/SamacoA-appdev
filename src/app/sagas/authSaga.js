@@ -1,4 +1,4 @@
-import { call, put, takeLatest } from 'redux-saga/effects';
+import { call, put, takeEvery } from 'redux-saga/effects';
 import { 
   LOGIN_REQUEST, 
   LOGIN_SUCCESS, 
@@ -11,14 +11,16 @@ import {
   GET_USER_FAILURE,
   LOGOUT 
 } from '../reducers/authReducer';
-import { authLogin, authMe, authLogout } from '../api/auth';
+import { authLogin, authRegister, authMe, authLogout } from '../api/auth';
 
 // Login Saga
 function* loginSaga(action) {
+  console.log('loginSaga started with:', action.payload);
   try {
     const { email, password } = action.payload;
-    // authLogin throws on error, returns data directly on success
     const result = yield call(authLogin, { email, password });
+    
+    console.log('Login response in saga:', result);
     
     yield put({ 
       type: LOGIN_SUCCESS, 
@@ -28,10 +30,11 @@ function* loginSaga(action) {
       } 
     });
     
-    // Optionally fetch user after login
+    // Fetch user after login
     yield put({ type: GET_USER_REQUEST });
     
   } catch (error) {
+    console.log('Login error in saga:', error);
     yield put({ 
       type: LOGIN_FAILURE, 
       payload: error.message 
@@ -41,16 +44,20 @@ function* loginSaga(action) {
 
 // Register Saga
 function* registerSaga(action) {
+  console.log('registerSaga started with:', action.payload);
   try {
     const { email, password } = action.payload;
-    // authRegister throws on error, returns data directly on success
-    yield call(authRegister, { email, password });
-
+    const result = yield call(authRegister, { email, password });
+    
+    console.log('Register response in saga:', result);
+    
     yield put({ 
-      type: REGISTER_SUCCESS 
+      type: REGISTER_SUCCESS, 
+      payload: result 
     });
-
+    
   } catch (error) {
+    console.log('Register error in saga:', error);
     yield put({ 
       type: REGISTER_FAILURE, 
       payload: error.message 
@@ -60,16 +67,19 @@ function* registerSaga(action) {
 
 // Get User Saga
 function* getUserSaga() {
+  console.log('getUserSaga started');
   try {
-    // authMe throws on error, returns user data directly on success
     const userData = yield call(authMe);
+    
+    console.log('Get user response in saga:', userData);
     
     yield put({ 
       type: GET_USER_SUCCESS, 
-      payload: { user: userData } 
+      payload: userData 
     });
     
   } catch (error) {
+    console.log('Get user error in saga:', error);
     yield put({ 
       type: GET_USER_FAILURE, 
       payload: error.message 
@@ -79,17 +89,28 @@ function* getUserSaga() {
 
 // Logout Saga
 function* logoutSaga() {
+  console.log('logoutSaga started');
   try {
     yield call(authLogout);
+    console.log('Logout successful');
   } catch (error) {
-    console.log('Logout error:', error);
+    console.log('Logout error in saga:', error);
   }
 }
 
-// Watcher Saga
-export function* watchAuth() {
-  yield takeLatest(LOGIN_REQUEST, loginSaga);
-  yield takeLatest(REGISTER_REQUEST, registerSaga);
-  yield takeLatest(GET_USER_REQUEST, getUserSaga);
-  yield takeLatest(LOGOUT, logoutSaga);
+// ========== WATCHER SAGAS (using takeEvery like teacher's code) ==========
+export function* watchLogin() {
+  yield takeEvery(LOGIN_REQUEST, loginSaga);
+}
+
+export function* watchRegister() {
+  yield takeEvery(REGISTER_REQUEST, registerSaga);
+}
+
+export function* watchGetUser() {
+  yield takeEvery(GET_USER_REQUEST, getUserSaga);
+}
+
+export function* watchLogout() {
+  yield takeEvery(LOGOUT, logoutSaga);
 }
