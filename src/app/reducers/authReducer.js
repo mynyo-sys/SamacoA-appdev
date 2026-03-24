@@ -1,6 +1,4 @@
-import { register } from "react-native/types_generated/Libraries/Renderer/shims/ReactNativeViewConfigRegistry";
-
-// Action Types
+// ========== ACTION TYPES ==========
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
 export const LOGIN_FAILURE = 'LOGIN_FAILURE';
@@ -12,7 +10,7 @@ export const GET_USER_REQUEST = 'GET_USER_REQUEST';
 export const GET_USER_SUCCESS = 'GET_USER_SUCCESS';
 export const GET_USER_FAILURE = 'GET_USER_FAILURE';
 
-// Initial State
+// ========== INITIAL STATE ==========
 const initialState = {
   user: null,
   token: null,
@@ -22,7 +20,7 @@ const initialState = {
   registerSuccess: false,
 };
 
-// Reducer
+// ========== REDUCER ==========
 export default function authReducer(state = initialState, action) {
   console.log('Reducer action:', action.type);
   switch (action.type) {
@@ -51,14 +49,14 @@ export default function authReducer(state = initialState, action) {
         isLoading: false,
         error: null, 
         registerSuccess: true,
-      }
+      };
       
     case GET_USER_SUCCESS:
       return {
         ...state,
         isLoading: false,
         isAuthenticated: true,
-        user: action.payload.user,
+        user: action.payload,
         error: null,
       };
     
@@ -76,14 +74,29 @@ export default function authReducer(state = initialState, action) {
     
     case LOGOUT:
       return {
-        ...state,
-        user: null,
-        token: null,
-        isAuthenticated: false,
-        error: null,
+        ...initialState,
       };
     
     default:
       return state;
   }
 }
+
+// ========== ACTION CREATORS ==========
+export const loginRequest = (email, password) => ({
+  type: LOGIN_REQUEST,
+  payload: { email, password },
+});
+
+export const registerRequest = (email, password) => ({
+  type: REGISTER_REQUEST,
+  payload: { email, password },
+});
+
+export const getUserRequest = () => ({
+  type: GET_USER_REQUEST,
+});
+
+export const logoutRequest = () => ({
+  type: LOGOUT,
+});

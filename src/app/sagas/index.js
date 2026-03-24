@@ -1,9 +1,17 @@
-import { all, fork } from 'redux-saga/effects';
-import { watchAuth } from './authSaga';
+import { all } from 'redux-saga/effects';
+import { 
+  watchLogin, 
+  watchRegister, 
+  watchGetUser, 
+  watchLogout 
+} from './authSaga';
 
 export default function* rootSaga() {
+  console.log('Root saga started');
   yield all([
-    fork(watchAuth),
-    // Add other sagas here
+    watchLogin(),
+    watchRegister(),
+    watchGetUser(),
+    watchLogout(),
   ]);
 }
