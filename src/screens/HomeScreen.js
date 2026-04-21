@@ -32,13 +32,16 @@ const HomeScreen = () => {
           <Text style={styles.email}>Email: {user.email}</Text>
         </View>
       )}
-      
+    
+
       <TouchableOpacity 
         style={styles.profileButton}
         onPress={handleProfilePress}
       >
         <Text style={styles.buttonText}>GO TO PROFILE</Text>
       </TouchableOpacity>
+
+
 
       <TouchableOpacity 
         style={styles.logoutButton}
@@ -96,6 +99,15 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
+  //   errorButton: {  // ADD THIS STYLE
+  //   backgroundColor: '#FF3B30',
+  //   paddingVertical: 12,
+  //   paddingHorizontal: 30,
+  //   borderRadius: 8,
+  //   marginBottom: 15,
+  //   width: '80%',
+  //   alignItems: 'center',
+  // },
   logoutButton: {
     backgroundColor: '#FF3B30',
     paddingVertical: 12,
