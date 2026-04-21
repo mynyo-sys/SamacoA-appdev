@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from './config';
+import type { AuthLoginParams, AuthRegisterParams, User } from '../../types';
 
-const BASE_URL = API_BASE_URL;
+const BASE_URL: string = API_BASE_URL;
 
-const defaultOptions = {
+const defaultOptions: RequestInit = {
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
@@ -11,7 +12,7 @@ const defaultOptions = {
 };
 
 // Token storage functions
-export async function storeToken(token) {
+export async function storeToken(token: string): Promise<void> {
   try {
     await AsyncStorage.setItem('userToken', token);
   } catch (error) {
@@ -19,7 +20,7 @@ export async function storeToken(token) {
   }
 }
 
-export async function getToken() {
+export async function getToken(): Promise<string | null> {
   try {
     return await AsyncStorage.getItem('userToken');
   } catch (error) {
@@ -28,7 +29,7 @@ export async function getToken() {
   }
 }
 
-export async function removeToken() {
+export async function removeToken(): Promise<void> {
   try {
     await AsyncStorage.removeItem('userToken');
   } catch (error) {
@@ -37,19 +38,19 @@ export async function removeToken() {
 }
 
 // Login API call
-export async function authLogin({ email, password }) {
+export async function authLogin({ email, password }: AuthLoginParams): Promise<{ token: string; user: User | null }> {
   try {
     console.log('Attempting login with:', { email });
-    
+
     const response = await fetch(`${BASE_URL}/login`, {
       method: 'POST',
       ...defaultOptions,
       body: JSON.stringify({ email, password }),
     });
-    
+
     const data = await response.json();
     console.log('Login response:', data);
-    
+
     if (response.ok) {
       if (data.token) {
         await storeToken(data.token);
@@ -67,19 +68,19 @@ export async function authLogin({ email, password }) {
 }
 
 // Register API call
-export async function authRegister({ email, password, }) {
+export async function authRegister({ email, password }: AuthRegisterParams): Promise<any> {
   try {
     console.log('Attempting registration with:', { email, password });
-    
+
     const response = await fetch(`${BASE_URL}/register`, {
       method: 'POST',
       ...defaultOptions,
       body: JSON.stringify({ email, password }),
     });
-    
+
     const data = await response.json();
     console.log('Register response:', data);
-    
+
     if (response.ok) {
       return data;
     } else {
@@ -92,16 +93,16 @@ export async function authRegister({ email, password, }) {
 }
 
 // Get current user
-export async function authMe() {
+export async function authMe(): Promise<User> {
   try {
     const token = await getToken();
-    
+
     if (!token) {
       throw new Error('No token found');
     }
-    
+
     console.log('Fetching user with token:', token.substring(0, 20) + '...');
-    
+
     const response = await fetch(`${BASE_URL}/me`, {
       method: 'GET',
       headers: {
@@ -109,10 +110,10 @@ export async function authMe() {
         'Authorization': `Bearer ${token}`,
       },
     });
-    
+
     const data = await response.json();
     console.log('User response:', data);
-    
+
     if (response.ok) {
       // Handle different response structures
       return data.user || data;
@@ -129,10 +130,10 @@ export async function authMe() {
 }
 
 // Logout
-export async function authLogout() {
+export async function authLogout(): Promise<{ success: boolean }> {
   try {
     const token = await getToken();
-    
+
     if (token) {
       // Call logout API (optional)
       try {
@@ -147,7 +148,7 @@ export async function authLogout() {
         console.log('Logout API error (non-critical):', apiError);
       }
     }
-    
+
     // Remove token from storage
     await removeToken();
     return { success: true };

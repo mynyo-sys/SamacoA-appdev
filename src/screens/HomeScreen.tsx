@@ -2,22 +2,27 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LOGOUT } from '../app/reducers/authReducer';
+import type { RootState } from '../app/reducers';
+import type { MainStackParamList } from '../types';
 
-const HomeScreen = () => {
+type HomeScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Home'>;
+
+const HomeScreen: React.FC = () => {
   const dispatch = useDispatch();
-  const navigation = useNavigation();
-  const { user } = useSelector(state => state.auth);
+  const navigation = useNavigation<HomeScreenNavigationProp>();
+  const { user } = useSelector((state: RootState) => state.auth);
 
   console.log('[SCREEN] Home screen loaded');
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     console.log('[ACTION] Logout button pressed');
     console.log(`[USER] Logging out: ${user?.email || 'unknown'}`);
     dispatch({ type: LOGOUT });
   };
 
-  const handleProfilePress = () => {
+  const handleProfilePress = (): void => {
     console.log('[ACTION] Profile button pressed');
     navigation.navigate('Profile');
   };
@@ -25,25 +30,22 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Home Screen</Text>
-      
+
       {user && (
         <View style={styles.userInfo}>
           <Text style={styles.welcome}>Welcome, {user.fullName || user.email}!</Text>
           <Text style={styles.email}>Email: {user.email}</Text>
         </View>
       )}
-    
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.profileButton}
         onPress={handleProfilePress}
       >
         <Text style={styles.buttonText}>GO TO PROFILE</Text>
       </TouchableOpacity>
 
-
-
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.logoutButton}
         onPress={handleLogout}
       >
@@ -99,15 +101,6 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
   },
-  //   errorButton: {  // ADD THIS STYLE
-  //   backgroundColor: '#FF3B30',
-  //   paddingVertical: 12,
-  //   paddingHorizontal: 30,
-  //   borderRadius: 8,
-  //   marginBottom: 15,
-  //   width: '80%',
-  //   alignItems: 'center',
-  // },
   logoutButton: {
     backgroundColor: '#FF3B30',
     paddingVertical: 12,

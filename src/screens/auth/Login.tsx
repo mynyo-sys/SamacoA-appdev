@@ -1,22 +1,26 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES } from '../../utils';
+import { ROUTES, type AuthStackParamList } from '../../types';
 import { LOGIN_REQUEST } from '../../app/reducers/authReducer';
+import type { RootState } from '../../app/reducers';
 
-const Login = () => {
-  const [emailAdd, setEmailAdd] = useState('');
-  const [password, setPassword] = useState('');
+type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
-  const navigation = useNavigation();
+const Login: React.FC = () => {
+  const [emailAdd, setEmailAdd] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+
+  const navigation = useNavigation<LoginScreenNavigationProp>();
   const dispatch = useDispatch();
-  
+
   // Get loading, error, and auth state from Redux
-  const { isLoading, error, isAuthenticated } = useSelector(state => state.auth);
+  const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   // Log when Login screen loads
   console.log('[SCREEN] Login screen loaded');
@@ -36,7 +40,7 @@ const Login = () => {
     }
   }, [isAuthenticated]);
 
-  const handleLogin = () => {
+  const handleLogin = (): void => {
     // Log button press with final values
     console.log('[ACTION] Login button pressed');
     console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
@@ -51,15 +55,15 @@ const Login = () => {
     }
 
     console.log('[VALIDATION] All fields filled, dispatching LOGIN_REQUEST');
-    
+
     // Dispatch login action
-    dispatch({ 
-      type: LOGIN_REQUEST, 
-      payload: { email: emailAdd, password } 
+    dispatch({
+      type: LOGIN_REQUEST,
+      payload: { email: emailAdd, password },
     });
   };
 
-  const handleRegisterPress = () => {
+  const handleRegisterPress = (): void => {
     console.log('[ACTION] Register link pressed');
     navigation.navigate(ROUTES.REGISTER);
   };
@@ -78,7 +82,7 @@ const Login = () => {
           label={'Email Address'}
           placeholder={'Enter Email Address'}
           value={emailAdd}
-          onChangeText={setEmailAdd}  // Back to original
+          onChangeText={setEmailAdd}
           containerStyle={{
             padding: 5,
           }}
@@ -93,7 +97,7 @@ const Login = () => {
           label={'Password'}
           placeholder={'Enter Password'}
           value={password}
-          onChangeText={setPassword}  // Back to original
+          onChangeText={setPassword}
           secureTextEntry={true}
           containerStyle={{
             padding: 5,
@@ -107,7 +111,7 @@ const Login = () => {
       </View>
 
       <CustomButton
-        label={isLoading ? "LOGGING IN..." : "LOGIN"}
+        label={isLoading ? 'LOGGING IN...' : 'LOGIN'}
         containerStyle={{
           backgroundColor: isLoading ? 'gray' : 'blue',
           borderRadius: 10,

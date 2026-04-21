@@ -1,3 +1,5 @@
+import type { AuthState, Action, LoginSuccessPayload, User } from '../../types';
+
 // ========== ACTION TYPES ==========
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
@@ -11,7 +13,7 @@ export const GET_USER_SUCCESS = 'GET_USER_SUCCESS';
 export const GET_USER_FAILURE = 'GET_USER_FAILURE';
 
 // ========== INITIAL STATE ==========
-const initialState = {
+const initialState: AuthState = {
   user: null,
   token: null,
   isLoading: false,
@@ -21,7 +23,7 @@ const initialState = {
 };
 
 // ========== REDUCER ==========
-export default function authReducer(state = initialState, action) {
+export default function authReducer(state: AuthState = initialState, action: Action): AuthState {
   console.log('Reducer action:', action.type);
   switch (action.type) {
     case LOGIN_REQUEST:
@@ -32,34 +34,34 @@ export default function authReducer(state = initialState, action) {
         isLoading: true,
         error: null,
       };
-    
+
     case LOGIN_SUCCESS:
       return {
         ...state,
         isLoading: false,
         isAuthenticated: true,
-        token: action.payload.token,
-        user: action.payload.user,
+        token: action.payload?.token ?? null,
+        user: action.payload?.user ?? null,
         error: null,
       };
-    
+
     case REGISTER_SUCCESS:
       return {
         ...state,
         isLoading: false,
-        error: null, 
+        error: null,
         registerSuccess: true,
       };
-      
+
     case GET_USER_SUCCESS:
       return {
         ...state,
         isLoading: false,
         isAuthenticated: true,
-        user: action.payload,
+        user: action.payload as User,
         error: null,
       };
-    
+
     case LOGIN_FAILURE:
     case REGISTER_FAILURE:
     case GET_USER_FAILURE:
@@ -69,26 +71,26 @@ export default function authReducer(state = initialState, action) {
         isAuthenticated: false,
         user: null,
         token: null,
-        error: action.payload,
+        error: action.payload as string | null,
       };
-    
+
     case LOGOUT:
       return {
         ...initialState,
       };
-    
+
     default:
       return state;
   }
 }
 
 // ========== ACTION CREATORS ==========
-export const loginRequest = (email, password) => ({
+export const loginRequest = (email: string, password: string) => ({
   type: LOGIN_REQUEST,
   payload: { email, password },
 });
 
-export const registerRequest = (email, password) => ({
+export const registerRequest = (email: string, password: string) => ({
   type: REGISTER_REQUEST,
   payload: { email, password },
 });

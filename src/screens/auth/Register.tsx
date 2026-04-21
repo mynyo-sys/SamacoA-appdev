@@ -1,21 +1,25 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES } from '../../utils';
+import { ROUTES, type AuthStackParamList } from '../../types';
 import { REGISTER_REQUEST } from '../../app/reducers/authReducer';
+import type { RootState } from '../../app/reducers';
 
-const Register = () => {
-  const [emailAdd, setEmailAdd] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
-  const navigation = useNavigation();
+const Register: React.FC = () => {
+  const [emailAdd, setEmailAdd] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [confirmPassword, setConfirmPassword] = useState<string>('');
+
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
   const dispatch = useDispatch();
-  const { isLoading, error, registerSuccess } = useSelector(state => state.auth || {});
+  const { isLoading, error, registerSuccess } = useSelector((state: RootState) => state.auth);
 
   // Log when Register screen loads
   console.log('[SCREEN] Register screen loaded');
@@ -37,7 +41,7 @@ const Register = () => {
     }
   }, [error]);
 
-  const handleRegister = () => {
+  const handleRegister = (): void => {
     // Log button press with final values
     console.log('[ACTION] Register button pressed');
     console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
@@ -56,15 +60,15 @@ const Register = () => {
     }
 
     console.log('[VALIDATION] All fields valid, dispatching REGISTER_REQUEST');
-    
+
     // Dispatch Redux action
-    dispatch({ 
-      type: REGISTER_REQUEST, 
-      payload: { email: emailAdd, password } 
+    dispatch({
+      type: REGISTER_REQUEST,
+      payload: { email: emailAdd, password },
     });
   };
 
-  const handleLoginPress = () => {
+  const handleLoginPress = (): void => {
     console.log('[ACTION] Login link pressed');
     navigation.navigate(ROUTES.LOGIN);
   };
@@ -129,7 +133,7 @@ const Register = () => {
       </View>
 
       <CustomButton
-        label={isLoading ? "REGISTERING..." : "REGISTER"}
+        label={isLoading ? 'REGISTERING...' : 'REGISTER'}
         containerStyle={{
           backgroundColor: isLoading ? 'gray' : 'green',
           borderRadius: 10,

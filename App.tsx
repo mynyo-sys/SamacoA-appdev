@@ -4,20 +4,19 @@ import { Provider } from 'react-redux';
 import { LogBox } from 'react-native';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/app/store';
-import AuthNav from './src/navigations/RootNav';
-
+import RootNav from './src/navigations/RootNav';
 
 LogBox.ignoreLogs([
   'Deep imports from the \'react-native\' package are deprecated',
-  'InteractionManager has been deprecated'
+  'InteractionManager has been deprecated',
 ]);
 
-const App = () => {
+const App: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <NavigationContainer>
-          <AuthNav />
+          <RootNav />
         </NavigationContainer>
       </PersistGate>
     </Provider>
