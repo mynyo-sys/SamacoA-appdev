@@ -3,12 +3,13 @@ import { Alert, Text, TouchableOpacity, View, ActivityIndicator } from 'react-na
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-
+import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
 import { ROUTES, type AuthStackParamList } from '../../types';
-import { LOGIN_REQUEST } from '../../app/reducers/authReducer';
+import { LOGIN_REQUEST, LOGIN_SUCCESS } from '../../app/reducers/authReducer';
 import type { RootState } from '../../app/reducers';
+import { _signInWithGoogle } from '../../utils/firebase';
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -142,6 +143,39 @@ const Login: React.FC = () => {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <GoogleSigninButton
+        size={GoogleSigninButton.Size.Wide}
+        color={GoogleSigninButton.Color.Dark}
+        onPress={async () => {
+          console.log('[ACTION] Google Sign-in button pressed');
+          const result = await _signInWithGoogle();
+          if (result.error) {
+            Alert.alert('Google Sign-in Failed', result.error);
+          } else if (result.userInfo) {
+            console.log('[SUCCESS] Google Sign-in successful:', result.userInfo);
+            const userEmail = result.userInfo.user?.email || 'Unknown';
+            const userName = result.userInfo.user?.name || 'Unknown';
+            Alert.alert('Success', `Signed in as ${userEmail}`);
+            
+            // Dispatch LOGIN_SUCCESS to automatically redirect to Home
+            dispatch({
+              type: LOGIN_SUCCESS,
+              payload: {
+                token: result.userInfo.idToken || 'google-token',
+                user: {
+                  email: userEmail,
+                  fullName: userName,
+                  id: result.userInfo.user?.id,
+                },
+              },
+            });
+          } else {
+            Alert.alert('Sign-in Cancelled', 'No user information received');
+          }
+        }}
+        disabled={isLoading}
+      />
     </View>
   );
 };
