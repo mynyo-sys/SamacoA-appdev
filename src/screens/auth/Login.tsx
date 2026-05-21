@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet, Image, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -87,10 +87,11 @@ const Login: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🍺</Text>
+          {/* Replace with actual logo image: <Image source={require('../../assets/logo.png')} style={styles.logoImage} /> */}
+          <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
         </View>
         <Text style={styles.title}>Samaco Brewery</Text>
         <Text style={styles.subtitle}>Sign in to your account</Text>
@@ -98,136 +99,142 @@ const Login: React.FC = () => {
 
       <View style={styles.inputContainer}>
         <CustomTextInput
-          label={'Email Address'}
-          placeholder={'Enter Email Address'}
+          label={'Email address'}
+          placeholder={'Enter your email'}
           value={emailAdd}
           onChangeText={setEmailAdd}
           containerStyle={{
-            padding: 5,
+            marginBottom: 16,
           }}
           textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
-            fontWeight: 'bold',
+            backgroundColor: '#1F2937',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            color: '#fff',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            fontSize: 16,
           }}
         />
         <CustomTextInput
           label={'Password'}
-          placeholder={'Enter Password'}
+          placeholder={'Enter your password'}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={true}
           containerStyle={{
-            padding: 5,
+            marginBottom: 16,
           }}
           textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
+            backgroundColor: '#1F2937',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            color: '#fff',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            fontSize: 16,
           }}
         />
-      </View>
-
-      <CustomButton
-        label={isLoading ? 'LOGGING IN...' : 'SIGN IN'}
-        containerStyle={{
-          backgroundColor: '#FFD700',
-          borderRadius: 12,
-          marginVertical: 24,
-          width: '100%',
-          shadowColor: '#FFD700',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-        textStyle={{
-          color: '#0a0a0a',
-          fontWeight: 'bold',
-          fontSize: 16,
-        }}
-        onPress={handleLogin}
-        disabled={isLoading}
-      >
-        {isLoading && <ActivityIndicator color="#0a0a0a" />}
-      </CustomButton>
-
-      <View style={styles.dividerContainer}>
-        <View style={styles.divider} />
-        <Text style={styles.dividerText}>New to Samaco Brewery?</Text>
-        <View style={styles.divider} />
       </View>
 
       <TouchableOpacity
-        style={styles.registerButton}
-        onPress={handleRegisterPress}
+        style={styles.signInButton}
+        onPress={handleLogin}
+        disabled={isLoading}
       >
-        <Text style={styles.registerButtonText}>Create an account</Text>
+        <View style={styles.buttonContent}>
+          {isLoading ? (
+            <ActivityIndicator color="#0a0a0a" />
+          ) : (
+            <>
+              <Text style={styles.signInButtonText}>Sign in</Text>
+              <Text style={styles.signInButtonIcon}>→</Text>
+            </>
+          )}
+        </View>
       </TouchableOpacity>
 
-      <View style={{ marginTop: 24, width: '100%' }}>
-        <GoogleSigninButton
-          size={GoogleSigninButton.Size.Wide}
-          color={GoogleSigninButton.Color.Dark}
-          onPress={async () => {
-            console.log('[ACTION] Google Sign-in button pressed');
-            const result = await _signInWithGoogle();
-            if (result.error) {
-              Toast.show({
-                type: 'error',
-                text1: 'Google Sign-in Failed',
-                text2: result.error,
-                position: 'top',
-                visibilityTime: 3000,
-              });
-            } else if (result.userInfo) {
-              console.log('[SUCCESS] Google Sign-in successful:', result.userInfo);
-              const userEmail = result.userInfo.user?.email || 'Unknown';
-              const userName = result.userInfo.user?.name || 'Unknown';
-              Toast.show({
-                type: 'success',
-                text1: 'Signed in Successfully',
-                text2: `Welcome, ${userEmail}`,
-                position: 'top',
-                visibilityTime: 2000,
-              });
+      <Text style={styles.newAccountText}>New to Samaco Brewery?</Text>
 
-              dispatch({
-                type: LOGIN_SUCCESS,
-                payload: {
-                  token: result.userInfo.idToken || 'google-token',
-                  user: {
-                    email: userEmail,
-                    fullName: userName,
-                    id: result.userInfo.user?.id,
-                  },
+      <TouchableOpacity
+        style={styles.createAccountButton}
+        onPress={handleRegisterPress}
+      >
+        <View style={styles.buttonContent}>
+          <Text style={styles.createAccountIcon}>👤</Text>
+          <Text style={styles.createAccountButtonText}>Create an account</Text>
+        </View>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.googleButton}
+        onPress={async () => {
+          console.log('[ACTION] Google Sign-in button pressed');
+          const result = await _signInWithGoogle();
+          if (result.error) {
+            Toast.show({
+              type: 'error',
+              text1: 'Google Sign-in Failed',
+              text2: result.error,
+              position: 'top',
+              visibilityTime: 3000,
+            });
+          } else if (result.userInfo) {
+            console.log('[SUCCESS] Google Sign-in successful:', result.userInfo);
+            const userEmail = result.userInfo.user?.email || 'Unknown';
+            const userName = result.userInfo.user?.name || 'Unknown';
+            Toast.show({
+              type: 'success',
+              text1: 'Signed in Successfully',
+              text2: `Welcome, ${userEmail}`,
+              position: 'top',
+              visibilityTime: 2000,
+            });
+
+            dispatch({
+              type: LOGIN_SUCCESS,
+              payload: {
+                token: result.userInfo.idToken || 'google-token',
+                user: {
+                  email: userEmail,
+                  fullName: userName,
+                  id: result.userInfo.user?.id,
                 },
-              });
-            } else {
-              Toast.show({
-                type: 'info',
-                text1: 'Sign-in Cancelled',
-                text2: 'No user information received',
-                position: 'top',
-                visibilityTime: 3000,
-              });
-            }
-          }}
-          disabled={isLoading}
-        />
-      </View>
-    </View>
+              },
+            });
+          } else {
+            Toast.show({
+              type: 'info',
+              text1: 'Sign-in Cancelled',
+              text2: 'No user information received',
+              position: 'top',
+              visibilityTime: 3000,
+            });
+          }
+        }}
+        disabled={isLoading}
+      >
+        <View style={styles.buttonContent}>
+          <Text style={styles.googleIcon}>G</Text>
+          <Text style={styles.googleButtonText}>Login with Google</Text>
+        </View>
+      </TouchableOpacity>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0a0a0a',
+  },
+  scrollContent: {
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0a0a0a',
+    flexGrow: 1,
   },
   header: {
     width: '100%',
@@ -236,56 +243,106 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     width: '100%',
+    marginBottom: 20,
   },
   logoContainer: {
     backgroundColor: '#FFD700',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
+  logoImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
   logoText: {
-    fontSize: 32,
+    fontSize: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold' as const,
     color: '#FFD700',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#888',
   },
-  dividerContainer: {
+  signInButton: {
+    backgroundColor: '#FFD700',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '100%',
+    marginBottom: 20,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  buttonContent: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginVertical: 20,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
+  signInButtonText: {
+    color: '#0a0a0a',
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    marginRight: 8,
   },
-  dividerText: {
-    paddingHorizontal: 12,
-    color: '#666',
-    fontSize: 12,
+  signInButtonIcon: {
+    color: '#0a0a0a',
+    fontSize: 20,
+    fontWeight: 'bold' as const,
   },
-  registerButton: {
-    borderWidth: 2,
-    borderColor: '#444',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center' as const,
-  },
-  registerButtonText: {
+  newAccountText: {
     color: '#888',
     fontSize: 14,
+    marginBottom: 16,
+  },
+  createAccountButton: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '100%',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  createAccountIcon: {
+    fontSize: 20,
+    marginRight: 8,
+  },
+  createAccountButtonText: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  googleButton: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  googleIcon: {
+    color: '#4285F4',
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    marginRight: 8,
+  },
+  googleButtonText: {
+    color: '#888',
+    fontSize: 16,
     fontWeight: '600' as const,
   },
 });

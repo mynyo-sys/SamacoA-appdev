@@ -17,11 +17,10 @@ const RootNav: React.FC = () => {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {!isAuthenticated ? (
-        <Stack.Screen name="Auth" component={AuthNav} />
-      ) : (
-        <Stack.Screen name="Main" component={MainNav} />
-      )}
+      {/* Always show MainNav first (Customer Dashboard) */}
+      <Stack.Screen name="Main" component={MainNav} />
+      {/* AuthNav is shown only when needed (e.g., before ordering) */}
+      <Stack.Screen name="Auth" component={AuthNav} />
     </Stack.Navigator>
   );
 };

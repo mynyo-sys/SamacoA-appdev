@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -50,11 +50,6 @@ const HomeScreen: React.FC = () => {
     dispatch({ type: LOGOUT });
   };
 
-  const handleProfilePress = (): void => {
-    console.log('[ACTION] Profile button pressed');
-    navigation.navigate(ROUTES.PROFILE);
-  };
-
   const handleProductsPress = (): void => {
     console.log('[ACTION] Products button pressed');
     navigation.navigate(ROUTES.PRODUCTS);
@@ -62,48 +57,122 @@ const HomeScreen: React.FC = () => {
 
   const handleOrdersPress = (): void => {
     console.log('[ACTION] Orders button pressed');
+    // Check if user is authenticated before navigating to orders
+    if (!isAuthenticated) {
+      Toast.show({
+        type: 'error',
+        text1: 'Login Required',
+        text2: 'Please login to view your orders',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      // @ts-ignore - navigating to Auth stack
+      navigation.navigate('Auth', { screen: 'Login' });
+      return;
+    }
     navigation.navigate(ROUTES.ORDERS);
   };
 
+  const handleProfilePress = (): void => {
+    console.log('[ACTION] Profile button pressed');
+    // Check if user is authenticated before navigating to profile
+    if (!isAuthenticated) {
+      Toast.show({
+        type: 'error',
+        text1: 'Login Required',
+        text2: 'Please login to view your profile',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      // @ts-ignore - navigating to Auth stack
+      navigation.navigate('Auth', { screen: 'Login' });
+      return;
+    }
+    navigation.navigate(ROUTES.PROFILE);
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {/* Header with Logo */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🍺 Samaco Brewery</Text>
-        <Text style={styles.headerSubtitle}>Customer Dashboard</Text>
+        <View style={styles.logoContainer}>
+          {/* Replace with actual logo: <Image source={require('../assets/images/logo.png')} style={styles.logoImage} /> */}
+          <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
+        </View>
+        <Text style={styles.headerTitle}>Samaco Brewery</Text>
+        <Text style={styles.headerSubtitle}>Craft Beer Excellence</Text>
       </View>
 
-      {user && (
-        <View style={styles.userInfo}>
-          <Text style={styles.welcome}>Welcome, {user.fullName || user.email}!</Text>
-          <Text style={styles.email}>{user.email}</Text>
+      {/* Welcome Section */}
+      {user ? (
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeText}>Welcome back,</Text>
+          <Text style={styles.userName}>{user.fullName || user.email}</Text>
+          <Text style={styles.userEmail}>{user.email}</Text>
+        </View>
+      ) : (
+        <View style={styles.guestCard}>
+          <Text style={styles.guestTitle}>Welcome to Samaco Brewery</Text>
+          <Text style={styles.guestSubtitle}>Browse our products and order when ready</Text>
         </View>
       )}
 
-      <View style={styles.quickActions}>
+      {/* Featured Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Featured Products</Text>
+        <View style={styles.featuredCard}>
+          <Text style={styles.featuredIcon}>🍻</Text>
+          <View style={styles.featuredContent}>
+            <Text style={styles.featuredTitle}>Premium Craft Beer</Text>
+            <Text style={styles.featuredSubtitle}>Fresh from our brewery</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Quick Actions */}
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>Quick Actions</Text>
 
         <TouchableOpacity style={styles.actionCard} onPress={handleProductsPress}>
-          <Text style={styles.actionIcon}>🍺</Text>
-          <Text style={styles.actionTitle}>Browse Products</Text>
-          <Text style={styles.actionSubtitle}>View our selection</Text>
+          <View style={styles.actionIconContainer}>
+            <Text style={styles.actionIcon}>🍺</Text>
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>Browse Products</Text>
+            <Text style={styles.actionSubtitle}>View our selection</Text>
+          </View>
+          <Text style={styles.actionArrow}>→</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionCard} onPress={handleOrdersPress}>
-          <Text style={styles.actionIcon}>📦</Text>
-          <Text style={styles.actionTitle}>My Orders</Text>
-          <Text style={styles.actionSubtitle}>View order history</Text>
+          <View style={styles.actionIconContainer}>
+            <Text style={styles.actionIcon}>📦</Text>
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>My Orders</Text>
+            <Text style={styles.actionSubtitle}>View order history</Text>
+          </View>
+          <Text style={styles.actionArrow}>→</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionCard} onPress={handleProfilePress}>
-          <Text style={styles.actionIcon}>👤</Text>
-          <Text style={styles.actionTitle}>My Profile</Text>
-          <Text style={styles.actionSubtitle}>Manage your account</Text>
+          <View style={styles.actionIconContainer}>
+            <Text style={styles.actionIcon}>👤</Text>
+          </View>
+          <View style={styles.actionContent}>
+            <Text style={styles.actionTitle}>My Profile</Text>
+            <Text style={styles.actionSubtitle}>Manage your account</Text>
+          </View>
+          <Text style={styles.actionArrow}>→</Text>
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.buttonText}>LOGOUT</Text>
-      </TouchableOpacity>
+      {/* Logout Button (only show if authenticated) */}
+      {isAuthenticated && (
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
@@ -113,27 +182,53 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0a0a0a',
   },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
   header: {
-    padding: 24,
-    backgroundColor: '#111827',
-    borderBottomWidth: 4,
-    borderBottomColor: '#FFD700',
+    alignItems: 'center',
+    paddingVertical: 32,
+    borderBottomWidth: 2,
+    borderBottomColor: 'rgba(255, 215, 0, 0.3)',
+  },
+  logoContainer: {
+    backgroundColor: '#FFD700',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  logoText: {
+    fontSize: 40,
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
   },
   headerTitle: {
     fontSize: 32,
     fontWeight: 'bold' as const,
     color: '#FFD700',
+    marginBottom: 4,
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#9CA3AF',
-    marginTop: 4,
   },
-  userInfo: {
+  welcomeCard: {
     backgroundColor: '#1F2937',
     padding: 24,
     borderRadius: 16,
-    margin: 20,
+    marginVertical: 20,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255, 215, 0, 0.2)',
@@ -143,18 +238,49 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  welcome: {
-    fontSize: 22,
-    fontWeight: 'bold' as const,
-    marginBottom: 8,
-    color: '#fff',
+  welcomeText: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginBottom: 4,
   },
-  email: {
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+    color: '#FFD700',
+    marginBottom: 4,
+  },
+  userEmail: {
     fontSize: 14,
     color: '#9CA3AF',
   },
-  quickActions: {
-    padding: 20,
+  guestCard: {
+    backgroundColor: '#1F2937',
+    padding: 24,
+    borderRadius: 16,
+    marginVertical: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.2)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  guestTitle: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#FFD700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  guestSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  section: {
+    marginVertical: 20,
   },
   sectionTitle: {
     fontSize: 20,
@@ -162,40 +288,88 @@ const styles = StyleSheet.create({
     color: '#FFD700',
     marginBottom: 16,
   },
-  actionCard: {
+  featuredCard: {
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 16,
     flexDirection: 'row' as const,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.15)',
+    borderColor: 'rgba(255, 215, 0, 0.2)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
   },
-  actionIcon: {
-    fontSize: 36,
+  featuredIcon: {
+    fontSize: 48,
     marginRight: 16,
   },
-  actionTitle: {
+  featuredContent: {
+    flex: 1,
+  },
+  featuredTitle: {
     fontSize: 18,
     fontWeight: 'bold' as const,
     color: '#fff',
+    marginBottom: 4,
+  },
+  featuredSubtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  actionCard: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row' as const,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 215, 0, 0.15)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  actionIconContainer: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  actionIcon: {
+    fontSize: 24,
+  },
+  actionContent: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#fff',
+    marginBottom: 2,
   },
   actionSubtitle: {
     fontSize: 13,
     color: '#9CA3AF',
+  },
+  actionArrow: {
+    fontSize: 24,
+    color: '#FFD700',
+    fontWeight: 'bold' as const,
   },
   logoutButton: {
     backgroundColor: '#EF4444',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
-    margin: 20,
+    marginVertical: 20,
     alignItems: 'center',
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 4 },
@@ -203,7 +377,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  buttonText: {
+  logoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold' as const,

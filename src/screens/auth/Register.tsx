@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet, ScrollView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
@@ -99,10 +99,11 @@ const Register: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🍺</Text>
+          {/* Replace with actual logo image: <Image source={require('../../assets/logo.png')} style={styles.logoImage} /> */}
+          <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
         </View>
         <Text style={styles.title}>Samaco Brewery</Text>
         <Text style={styles.subtitle}>Create an account</Text>
@@ -110,101 +111,110 @@ const Register: React.FC = () => {
 
       <View style={styles.inputContainer}>
         <CustomTextInput
-          label={'Email Address'}
-          placeholder={'Enter Email Address'}
+          label={'Email address'}
+          placeholder={'Enter your email'}
           value={emailAdd}
           onChangeText={setEmailAdd}
           keyboardType="email-address"
           autoCapitalize="none"
           containerStyle={{
-            padding: 5,
+            marginBottom: 16,
           }}
           textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
-            fontWeight: 'bold',
+            backgroundColor: '#1F2937',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            color: '#fff',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            fontSize: 16,
           }}
         />
         <CustomTextInput
           label={'Password'}
-          placeholder={'Enter Password'}
+          placeholder={'Enter your password'}
           value={password}
           onChangeText={setPassword}
           secureTextEntry={true}
           containerStyle={{
-            padding: 5,
+            marginBottom: 16,
           }}
           textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
+            backgroundColor: '#1F2937',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            color: '#fff',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            fontSize: 16,
           }}
         />
         <CustomTextInput
           label={'Confirm Password'}
-          placeholder={'Confirm Password'}
+          placeholder={'Confirm your password'}
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           secureTextEntry={true}
           containerStyle={{
-            padding: 5,
+            marginBottom: 16,
           }}
           textStyle={{
-            borderRadius: 10,
-            color: 'black',
-            marginLeft: 10,
+            backgroundColor: '#1F2937',
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: '#374151',
+            color: '#fff',
+            paddingHorizontal: 16,
+            paddingVertical: 12,
+            fontSize: 16,
           }}
         />
       </View>
 
-      <CustomButton
-        label={isLoading ? 'REGISTERING...' : 'CREATE ACCOUNT'}
-        containerStyle={{
-          backgroundColor: '#FFD700',
-          borderRadius: 12,
-          marginVertical: 24,
-          width: '100%',
-          shadowColor: '#FFD700',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.3,
-          shadowRadius: 8,
-          elevation: 8,
-        }}
-        textStyle={{
-          color: '#0a0a0a',
-          fontWeight: 'bold' as const,
-          fontSize: 16,
-        }}
+      <TouchableOpacity
+        style={styles.createAccountButton}
         onPress={handleRegister}
         disabled={isLoading}
       >
-        {isLoading && <ActivityIndicator color="#0a0a0a" />}
-      </CustomButton>
+        <View style={styles.buttonContent}>
+          {isLoading ? (
+            <ActivityIndicator color="#0a0a0a" />
+          ) : (
+            <>
+              <Text style={styles.createAccountButtonText}>Create account</Text>
+              <Text style={styles.createAccountButtonIcon}>+</Text>
+            </>
+          )}
+        </View>
+      </TouchableOpacity>
 
-      <View style={styles.dividerContainer}>
-        <View style={styles.divider} />
-        <Text style={styles.dividerText}>Already have an account?</Text>
-        <View style={styles.divider} />
-      </View>
+      <Text style={styles.alreadyAccountText}>Already have an account?</Text>
 
       <TouchableOpacity
         style={styles.loginButton}
         onPress={handleLoginPress}
       >
-        <Text style={styles.loginButtonText}>Login</Text>
+        <View style={styles.buttonContent}>
+          <Text style={styles.loginIcon}>👤</Text>
+          <Text style={styles.loginButtonText}>Login</Text>
+        </View>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#0a0a0a',
+  },
+  scrollContent: {
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#0a0a0a',
+    flexGrow: 1,
   },
   header: {
     width: '100%',
@@ -213,56 +223,85 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     backgroundColor: '#FFD700',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
+  logoImage: {
+    width: 60,
+    height: 60,
+    resizeMode: 'contain',
+  },
   logoText: {
-    fontSize: 32,
+    fontSize: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold' as const,
     color: '#FFD700',
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#888',
   },
   inputContainer: {
     width: '100%',
+    marginBottom: 20,
   },
-  dividerContainer: {
+  createAccountButton: {
+    backgroundColor: '#FFD700',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '100%',
+    marginBottom: 20,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  buttonContent: {
     flexDirection: 'row' as const,
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
-    marginVertical: 20,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
+  createAccountButtonText: {
+    color: '#0a0a0a',
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    marginRight: 8,
   },
-  dividerText: {
-    paddingHorizontal: 12,
-    color: '#666',
-    fontSize: 12,
+  createAccountButtonIcon: {
+    color: '#0a0a0a',
+    fontSize: 24,
+    fontWeight: 'bold' as const,
+  },
+  alreadyAccountText: {
+    color: '#888',
+    fontSize: 14,
+    marginBottom: 16,
   },
   loginButton: {
-    borderWidth: 2,
-    borderColor: '#444',
+    backgroundColor: '#1a1a1a',
     borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center' as const,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  loginIcon: {
+    fontSize: 20,
+    marginRight: 8,
   },
   loginButtonText: {
     color: '#888',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600' as const,
   },
 });
