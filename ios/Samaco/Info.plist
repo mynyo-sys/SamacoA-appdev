@@ -7,7 +7,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Samaco</string>
+	<string>Samaco Brewery</string>
+	<key>CFBundleGetInfoString</key>
+	<string>Samaco Brewery Customer App v1.0.0</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>

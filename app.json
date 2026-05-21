@@ -1,5 +1,36 @@
 {
   "name": "Samaco",
-  "displayName": "Samaco"
+  "displayName": "Samaco Brewery",
+  "version": "1.0.0",
+  "description": "Samaco Brewery Customer App - Order products and track your orders in real-time",
+  "author": "",
+  "license": "MIT",
+  "expo": {
+    "name": "Samaco Brewery",
+    "slug": "samaco-brewery",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0a"
+    },
+    "android": {
+      "package": "com.samaco",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0a"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.samaco",
+      "buildNumber": "1",
+      "infoPlist": {
+        "CFBundleDisplayName": "Samaco Brewery"
+      }
+    }
+  }
 }
   

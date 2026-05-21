@@ -72,6 +72,8 @@ export type AuthStackParamList = {
 export type MainStackParamList = {
   Home: undefined;
   Profile: undefined;
+  Products: undefined;
+  Orders: undefined;
 };
 
 // ========== COMPONENT PROP TYPES ==========
@@ -102,6 +104,8 @@ export const ROUTES = {
   REGISTER: 'Register',
   HOME: 'Home',
   PROFILE: 'Profile',
+  PRODUCTS: 'Products',
+  ORDERS: 'Orders',
 } as const;
 
 export type RouteName = typeof ROUTES[keyof typeof ROUTES];

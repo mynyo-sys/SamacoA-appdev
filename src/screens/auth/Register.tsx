@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
 
 import CustomButton from '../../components/CustomButton';
 import CustomTextInput from '../../components/CustomTextInput';
@@ -28,7 +29,13 @@ const Register: React.FC = () => {
   useEffect(() => {
     if (registerSuccess) {
       console.log('[SUCCESS] Registration successful, redirecting to login');
-      Alert.alert('Success', 'Registration successful! Please login.');
+      Toast.show({
+        type: 'success',
+        text1: 'Registration Successful!',
+        text2: 'Please login to continue',
+        position: 'top',
+        visibilityTime: 2000,
+      });
       navigation.navigate(ROUTES.LOGIN);
     }
   }, [registerSuccess, navigation]);
@@ -37,7 +44,13 @@ const Register: React.FC = () => {
   useEffect(() => {
     if (error) {
       console.log(`[ERROR] Registration failed: ${error}`);
-      Alert.alert('Registration Failed', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: error,
+        position: 'top',
+        visibilityTime: 3000,
+      });
     }
   }, [error]);
 
@@ -49,13 +62,25 @@ const Register: React.FC = () => {
     // Validate inputs
     if (emailAdd === '' || password === '' || confirmPassword === '') {
       console.log('[VALIDATION] Empty fields detected');
-      Alert.alert('Error', 'Please fill in all fields');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please fill in all fields',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
 
     if (password !== confirmPassword) {
       console.log('[VALIDATION] Passwords do not match');
-      Alert.alert('Error', 'Passwords do not match');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Passwords do not match',
+        position: 'top',
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -74,15 +99,16 @@ const Register: React.FC = () => {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <View style={{ width: '100%' }}>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>🍺</Text>
+        </View>
+        <Text style={styles.title}>Samaco Brewery</Text>
+        <Text style={styles.subtitle}>Create an account</Text>
+      </View>
+
+      <View style={styles.inputContainer}>
         <CustomTextInput
           label={'Email Address'}
           placeholder={'Enter Email Address'}
@@ -133,39 +159,112 @@ const Register: React.FC = () => {
       </View>
 
       <CustomButton
-        label={isLoading ? 'REGISTERING...' : 'REGISTER'}
+        label={isLoading ? 'REGISTERING...' : 'CREATE ACCOUNT'}
         containerStyle={{
-          backgroundColor: isLoading ? 'gray' : 'green',
-          borderRadius: 10,
-          marginVertical: 20,
-          width: '80%',
+          backgroundColor: '#FFD700',
+          borderRadius: 12,
+          marginVertical: 24,
+          width: '100%',
+          shadowColor: '#FFD700',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 8,
         }}
         textStyle={{
-          color: 'white',
-          fontWeight: 'bold',
+          color: '#0a0a0a',
+          fontWeight: 'bold' as const,
+          fontSize: 16,
         }}
         onPress={handleRegister}
         disabled={isLoading}
       >
-        {isLoading && <ActivityIndicator color="white" />}
+        {isLoading && <ActivityIndicator color="#0a0a0a" />}
       </CustomButton>
 
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text>Already have an account?</Text>
-        <TouchableOpacity onPress={handleLoginPress}>
-          <Text style={{ color: 'blue', marginLeft: 10, fontWeight: 'bold' }}>
-            Login
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.dividerContainer}>
+        <View style={styles.divider} />
+        <Text style={styles.dividerText}>Already have an account?</Text>
+        <View style={styles.divider} />
       </View>
+
+      <TouchableOpacity
+        style={styles.loginButton}
+        onPress={handleLoginPress}
+      >
+        <Text style={styles.loginButtonText}>Login</Text>
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0a0a0a',
+  },
+  header: {
+    width: '100%',
+    marginBottom: 40,
+    alignItems: 'center',
+  },
+  logoContainer: {
+    backgroundColor: '#FFD700',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  logoText: {
+    fontSize: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold' as const,
+    color: '#FFD700',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#888',
+  },
+  inputContainer: {
+    width: '100%',
+  },
+  dividerContainer: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginVertical: 20,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#333',
+  },
+  dividerText: {
+    paddingHorizontal: 12,
+    color: '#666',
+    fontSize: 12,
+  },
+  loginButton: {
+    borderWidth: 2,
+    borderColor: '#444',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center' as const,
+  },
+  loginButtonText: {
+    color: '#888',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+});
 
 export default Register;

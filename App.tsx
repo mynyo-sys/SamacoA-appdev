@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { LogBox } from 'react-native';
 import { PersistGate } from 'redux-persist/integration/react';
+import Toast from 'react-native-toast-message';
 import { store, persistor } from './src/app/store';
 import RootNav from './src/navigations/RootNav';
 
@@ -18,6 +19,7 @@ const App: React.FC = () => {
         <NavigationContainer>
           <RootNav />
         </NavigationContainer>
+        <Toast />
       </PersistGate>
     </Provider>
   );

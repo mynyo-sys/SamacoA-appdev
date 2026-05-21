@@ -6,6 +6,8 @@ import { ROUTES } from '../types';
 // screens
 import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import ProductsScreen from '../screens/ProductsScreen';
+import OrdersScreen from '../screens/OrdersScreen';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
@@ -15,12 +17,22 @@ const MainNavigation: React.FC = () => {
       <Stack.Screen
         name={ROUTES.HOME}
         component={HomeScreen}
-        options={{ headerShown: true, title: 'Home' }}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ROUTES.PRODUCTS}
+        component={ProductsScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ROUTES.ORDERS}
+        component={OrdersScreen}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name={ROUTES.PROFILE}
         component={ProfileScreen}
-        options={{ headerShown: true, title: 'Profile' }}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
