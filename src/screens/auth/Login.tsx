@@ -1,16 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet, Image, ScrollView } from 'react-native';
+import {
+  Alert, Text, TouchableOpacity, View, ActivityIndicator,
+  StyleSheet, Image, ScrollView, TextInput, KeyboardAvoidingView,
+  Platform, Dimensions
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
-import { GoogleSigninButton } from '@react-native-google-signin/google-signin';
 import Toast from 'react-native-toast-message';
-import CustomButton from '../../components/CustomButton';
-import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES, type AuthStackParamList } from '../../types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LOGIN_REQUEST, LOGIN_SUCCESS } from '../../app/reducers/authReducer';
 import type { RootState } from '../../app/reducers';
 import { _signInWithGoogle } from '../../utils/firebase';
+import { ROUTES, type AuthStackParamList } from '../../types';
+import { API_BASE_URL } from '../../app/api/config';
+
+const { width, height } = Dimensions.get('window');
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -21,16 +26,10 @@ const Login: React.FC = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
   const dispatch = useDispatch();
 
-  // Get loading, error, and auth state from Redux
   const { isLoading, error, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
-  // Log when Login screen loads
-  console.log('[SCREEN] Login screen loaded');
-
-  // Show error toast when error changes
   useEffect(() => {
     if (error) {
-      console.log(`[ERROR] Login failed: ${error}`);
       Toast.show({
         type: 'error',
         text1: 'Login Failed',
@@ -41,10 +40,8 @@ const Login: React.FC = () => {
     }
   }, [error]);
 
-  // Log when authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      console.log('[SUCCESS] User authenticated successfully');
       Toast.show({
         type: 'success',
         text1: 'Welcome Back!',
@@ -52,16 +49,12 @@ const Login: React.FC = () => {
         position: 'top',
         visibilityTime: 2000,
       });
+      navigation.navigate('Main' as any);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigation]);
 
   const handleLogin = (): void => {
-    // Log button press with final values
-    console.log('[ACTION] Login button pressed');
-    console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
-
     if (emailAdd === '' || password === '') {
-      console.log('[VALIDATION] Empty fields detected');
       Toast.show({
         type: 'error',
         text1: 'Invalid Credentials',
@@ -72,9 +65,6 @@ const Login: React.FC = () => {
       return;
     }
 
-    console.log('[VALIDATION] All fields filled, dispatching LOGIN_REQUEST');
-
-    // Dispatch login action
     dispatch({
       type: LOGIN_REQUEST,
       payload: { email: emailAdd, password },
@@ -82,146 +72,156 @@ const Login: React.FC = () => {
   };
 
   const handleRegisterPress = (): void => {
-    console.log('[ACTION] Register link pressed');
     navigation.navigate(ROUTES.REGISTER);
   };
 
+  const handleGoogleSignIn = async (): Promise<void> => {
+    try {
+      const result = await _signInWithGoogle();
+      
+      if (result.error) {
+        Toast.show({
+          type: 'error',
+          text1: 'Google Sign-in Failed',
+          text2: result.error,
+          position: 'top',
+          visibilityTime: 3000,
+        });
+        return;
+      }
+      
+      if (result.success && result.token) {
+        Toast.show({
+          type: 'success',
+          text1: 'Signed in Successfully',
+          text2: `Welcome, ${result.user?.email || 'User'}`,
+          position: 'top',
+          visibilityTime: 2000,
+        });
+
+        await AsyncStorage.setItem('userToken', result.token);
+
+        dispatch({
+          type: LOGIN_SUCCESS,
+          payload: {
+            token: result.token,
+            user: {
+              email: result.user?.email || 'Unknown',
+              fullName: result.user?.fullName || `${result.user?.firstName || ''} ${result.user?.lastName || ''}`.trim() || 'User',
+              id: result.user?.id,
+            },
+          },
+        });
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Google Sign-in Failed',
+          text2: 'No token received from Google',
+          position: 'top',
+          visibilityTime: 3000,
+        });
+      }
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Authentication Failed',
+        text2: error.message || 'Could not authenticate with backend',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+    }
+  };
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          {/* Replace with actual logo image: <Image source={require('../../assets/logo.png')} style={styles.logoImage} /> */}
-          <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
-        </View>
-        <Text style={styles.title}>Samaco Brewery</Text>
-        <Text style={styles.subtitle}>Sign in to your account</Text>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <CustomTextInput
-          label={'Email address'}
-          placeholder={'Enter your email'}
-          value={emailAdd}
-          onChangeText={setEmailAdd}
-          containerStyle={{
-            marginBottom: 16,
-          }}
-          textStyle={{
-            backgroundColor: '#1F2937',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#374151',
-            color: '#fff',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            fontSize: 16,
-          }}
-        />
-        <CustomTextInput
-          label={'Password'}
-          placeholder={'Enter your password'}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={true}
-          containerStyle={{
-            marginBottom: 16,
-          }}
-          textStyle={{
-            backgroundColor: '#1F2937',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#374151',
-            color: '#fff',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            fontSize: 16,
-          }}
-        />
-      </View>
-
-      <TouchableOpacity
-        style={styles.signInButton}
-        onPress={handleLogin}
-        disabled={isLoading}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.buttonContent}>
-          {isLoading ? (
-            <ActivityIndicator color="#0a0a0a" />
-          ) : (
-            <>
-              <Text style={styles.signInButtonText}>Sign in</Text>
-              <Text style={styles.signInButtonIcon}>→</Text>
-            </>
-          )}
+        <View style={styles.header}>
+          <View style={styles.logoWrapper}>
+            <View style={styles.logoContainer}>
+              <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
+            </View>
+          </View>
+          <Text style={styles.title}>Samaco Brewery</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
-      </TouchableOpacity>
 
-      <Text style={styles.newAccountText}>New to Samaco Brewery?</Text>
+        <View style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>✉️</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter your email"
+                placeholderTextColor="#6B7280"
+                value={emailAdd}
+                onChangeText={setEmailAdd}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
 
-      <TouchableOpacity
-        style={styles.createAccountButton}
-        onPress={handleRegisterPress}
-      >
-        <View style={styles.buttonContent}>
-          <Text style={styles.createAccountIcon}>👤</Text>
-          <Text style={styles.createAccountButtonText}>Create an account</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter your password"
+                placeholderTextColor="#6B7280"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={true}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.signInButton, isLoading && styles.signInButtonDisabled]}
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#0a0a0a" size="small" />
+            ) : (
+              <Text style={styles.signInButtonText}>Sign In</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <TouchableOpacity
+            style={styles.googleButton}
+            onPress={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <View style={styles.googleIconContainer}>
+              <Text style={styles.googleIcon}>G</Text>
+            </View>
+            <Text style={styles.googleButtonText}>Continue with Google</Text>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.googleButton}
-        onPress={async () => {
-          console.log('[ACTION] Google Sign-in button pressed');
-          const result = await _signInWithGoogle();
-          if (result.error) {
-            Toast.show({
-              type: 'error',
-              text1: 'Google Sign-in Failed',
-              text2: result.error,
-              position: 'top',
-              visibilityTime: 3000,
-            });
-          } else if (result.userInfo) {
-            console.log('[SUCCESS] Google Sign-in successful:', result.userInfo);
-            const userEmail = result.userInfo.user?.email || 'Unknown';
-            const userName = result.userInfo.user?.name || 'Unknown';
-            Toast.show({
-              type: 'success',
-              text1: 'Signed in Successfully',
-              text2: `Welcome, ${userEmail}`,
-              position: 'top',
-              visibilityTime: 2000,
-            });
-
-            dispatch({
-              type: LOGIN_SUCCESS,
-              payload: {
-                token: result.userInfo.idToken || 'google-token',
-                user: {
-                  email: userEmail,
-                  fullName: userName,
-                  id: result.userInfo.user?.id,
-                },
-              },
-            });
-          } else {
-            Toast.show({
-              type: 'info',
-              text1: 'Sign-in Cancelled',
-              text2: 'No user information received',
-              position: 'top',
-              visibilityTime: 3000,
-            });
-          }
-        }}
-        disabled={isLoading}
-      >
-        <View style={styles.buttonContent}>
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleButtonText}>Login with Google</Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Don't have an account?</Text>
+          <TouchableOpacity onPress={handleRegisterPress}>
+            <Text style={styles.signUpLink}>Sign Up</Text>
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
-    </ScrollView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -231,119 +231,159 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0a0a',
   },
   scrollContent: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 60,
   },
   header: {
-    width: '100%',
-    marginBottom: 40,
     alignItems: 'center',
+    marginBottom: 48,
   },
-  inputContainer: {
-    width: '100%',
-    marginBottom: 20,
+  logoWrapper: {
+    marginBottom: 24,
   },
   logoContainer: {
     backgroundColor: '#FFD700',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
   },
   logoImage: {
-    width: 60,
-    height: 60,
+    width: 70,
+    height: 70,
     resizeMode: 'contain',
   },
-  logoText: {
-    fontSize: 40,
-  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFD700',
     marginBottom: 8,
+    letterSpacing: 1,
   },
   subtitle: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  formContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#D1D5DB',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#374151',
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    color: '#FFFFFF',
     fontSize: 16,
-    color: '#888',
+    paddingVertical: 14,
   },
   signInButton: {
     backgroundColor: '#FFD700',
     borderRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 24,
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 6,
   },
-  buttonContent: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  signInButtonDisabled: {
+    opacity: 0.7,
   },
   signInButtonText: {
     color: '#0a0a0a',
     fontSize: 16,
-    fontWeight: 'bold' as const,
-    marginRight: 8,
+    fontWeight: 'bold',
   },
-  signInButtonIcon: {
-    color: '#0a0a0a',
-    fontSize: 20,
-    fontWeight: 'bold' as const,
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  newAccountText: {
-    color: '#888',
-    fontSize: 14,
-    marginBottom: 16,
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#374151',
   },
-  createAccountButton: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  createAccountIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  createAccountButtonText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: '600' as const,
+  dividerText: {
+    color: '#6B7280',
+    paddingHorizontal: 16,
+    fontSize: 12,
   },
   googleButton: {
-    backgroundColor: '#1a1a1a',
+    flexDirection: 'row',
+    backgroundColor: '#1F2937',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: '#374151',
+  },
+  googleIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   googleIcon: {
-    color: '#4285F4',
-    fontSize: 20,
-    fontWeight: 'bold' as const,
-    marginRight: 8,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   googleButtonText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: '600' as const,
+    color: '#D1D5DB',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  footerText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginRight: 8,
+  },
+  signUpLink: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

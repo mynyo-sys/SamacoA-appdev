@@ -6,6 +6,7 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +15,8 @@ import { customerApi, type Customer } from '../app/api/brewery';
 import type { RootState } from '../app/reducers';
 import { LOGOUT } from '../app/reducers/authReducer';
 import type { MainStackParamList } from '../types';
+
+const { width } = Dimensions.get('window');
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Profile'>;
 
@@ -44,7 +47,6 @@ const ProfileScreen: React.FC = () => {
   };
 
   const handleLogout = (): void => {
-    console.log('[ACTION] Logout button pressed');
     dispatch({ type: LOGOUT });
   };
 
@@ -58,17 +60,28 @@ const ProfileScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>👤 My Profile</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>👤 My Profile</Text>
+          <View style={styles.placeholder} />
+        </View>
         <Text style={styles.headerSubtitle}>Account information</Text>
       </View>
 
       <View style={styles.profileCard}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(customerData?.fullName || user?.fullName || 'U').charAt(0).toUpperCase()}
-          </Text>
+        <View style={styles.avatarContainer}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {(customerData?.fullName || user?.fullName || 'U').charAt(0).toUpperCase()}
+            </Text>
+          </View>
+          <View style={styles.editBadge}>
+            <Text style={styles.editBadgeText}>✎</Text>
+          </View>
         </View>
 
         <Text style={styles.name}>
@@ -76,27 +89,73 @@ const ProfileScreen: React.FC = () => {
         </Text>
         <Text style={styles.email}>{customerData?.email || user?.email}</Text>
 
-        {customerData?.phone && (
+        <View style={styles.infoSection}>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Phone:</Text>
-            <Text style={styles.infoValue}>{customerData.phone}</Text>
+            <View style={styles.infoIconContainer}>
+              <Text style={styles.infoIcon}>📧</Text>
+            </View>
+            <View style={styles.infoContent}>
+              <Text style={styles.infoLabel}>Email Address</Text>
+              <Text style={styles.infoValue}>{customerData?.email || user?.email}</Text>
+            </View>
           </View>
-        )}
 
-        {customerData?.address && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Address:</Text>
-            <Text style={styles.infoValue}>{customerData.address}</Text>
-          </View>
-        )}
+          {customerData?.phone && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconContainer}>
+                <Text style={styles.infoIcon}>📞</Text>
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Phone Number</Text>
+                <Text style={styles.infoValue}>{customerData.phone}</Text>
+              </View>
+            </View>
+          )}
+
+          {customerData?.address && (
+            <View style={styles.infoRow}>
+              <View style={styles.infoIconContainer}>
+                <Text style={styles.infoIcon}>📍</Text>
+              </View>
+              <View style={styles.infoContent}>
+                <Text style={styles.infoLabel}>Address</Text>
+                <Text style={styles.infoValue}>{customerData.address}</Text>
+              </View>
+            </View>
+          )}
+        </View>
 
         {error && (
-          <Text style={styles.errorText}>{error}</Text>
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={loadProfile}>
+              <Text style={styles.retryLink}>Retry</Text>
+            </TouchableOpacity>
+          </View>
         )}
       </View>
 
+      <View style={styles.statsSection}>
+        <Text style={styles.statsTitle}>Account Stats</Text>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statLabel}>Total Orders</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>₱0</Text>
+            <Text style={styles.statLabel}>Total Spent</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statLabel}>Reviews</Text>
+          </View>
+        </View>
+      </View>
+
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.buttonText}>LOGOUT</Text>
+        <Text style={styles.logoutIcon}>🚪</Text>
+        <Text style={styles.logoutButtonText}>Logout</Text>
       </TouchableOpacity>
     </ScrollView>
   );
@@ -108,14 +167,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0a0a',
   },
   header: {
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     backgroundColor: '#111827',
-    borderBottomWidth: 4,
+    borderBottomWidth: 2,
     borderBottomColor: '#FFD700',
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#FFD700',
+  },
+  placeholder: {
+    width: 40,
+  },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFD700',
   },
   headerSubtitle: {
@@ -135,83 +217,163 @@ const styles = StyleSheet.create({
   },
   profileCard: {
     backgroundColor: '#1F2937',
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: 20,
     margin: 20,
+    padding: 24,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    borderColor: 'rgba(255,215,0,0.2)',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#FFD700',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
   },
   avatarText: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontSize: 40,
+    fontWeight: 'bold',
     color: '#0a0a0a',
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#374151',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+  },
+  editBadgeText: {
+    fontSize: 16,
+    color: '#FFD700',
   },
   name: {
     fontSize: 24,
-    fontWeight: 'bold' as const,
+    fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   email: {
     fontSize: 14,
     color: '#9CA3AF',
     marginBottom: 24,
   },
-  infoRow: {
-    flexDirection: 'row' as const,
-    justifyContent: 'space-between',
+  infoSection: {
     width: '100%',
-    paddingVertical: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#374151',
   },
+  infoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  infoIcon: {
+    fontSize: 20,
+  },
+  infoContent: {
+    flex: 1,
+  },
   infoLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#9CA3AF',
+    marginBottom: 2,
   },
   infoValue: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#fff',
-    fontWeight: '500' as const,
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 12,
   },
   errorText: {
     color: '#EF4444',
     fontSize: 14,
-    marginTop: 10,
-    textAlign: 'center',
+    flex: 1,
+  },
+  retryLink: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statsSection: {
+    marginHorizontal: 20,
+    marginBottom: 24,
+  },
+  statsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFD700',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#9CA3AF',
   },
   logoutButton: {
-    backgroundColor: '#EF4444',
+    flexDirection: 'row',
+    backgroundColor: 'rgba(239,68,68,0.15)',
+    marginHorizontal: 20,
+    marginBottom: 40,
     paddingVertical: 16,
-    paddingHorizontal: 32,
     borderRadius: 12,
-    margin: 20,
     alignItems: 'center',
-    shadowColor: '#EF4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
   },
-  buttonText: {
-    color: '#fff',
+  logoutIcon: {
+    fontSize: 20,
+  },
+  logoutButtonText: {
+    color: '#EF4444',
     fontSize: 16,
-    fontWeight: 'bold' as const,
+    fontWeight: 'bold',
   },
 });
 

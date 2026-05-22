@@ -68,20 +68,24 @@ export async function authLogin({ email, password }: AuthLoginParams): Promise<{
 }
 
 // Register API call
-export async function authRegister({ email, password }: AuthRegisterParams): Promise<any> {
+export async function authRegister({ email, password, first_name, last_name }: AuthRegisterParams): Promise<any> {
   try {
-    console.log('Attempting registration with:', { email, password });
+    console.log('Attempting registration with:', { email, password, first_name, last_name });
 
     const response = await fetch(`${BASE_URL}/register`, {
       method: 'POST',
       ...defaultOptions,
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, first_name, last_name }),
     });
 
     const data = await response.json();
     console.log('Register response:', data);
 
     if (response.ok) {
+      // Save token if returned
+      if (data.token) {
+        await storeToken(data.token);
+      }
       return data;
     } else {
       throw new Error(data.message || data.error || 'Registration failed');

@@ -6,13 +6,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  Alert,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
+
+const { width } = Dimensions.get('window');
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -50,7 +52,7 @@ const OrdersScreen: React.FC = () => {
         position: 'top',
         visibilityTime: 2000,
       });
-      loadOrders(); // Reload orders
+      loadOrders();
     } catch (err: any) {
       Toast.show({
         type: 'error',
@@ -62,56 +64,84 @@ const OrdersScreen: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: string): string => {
+  const getStatusColor = (status: string): { bg: string; text: string } => {
     switch (status.toLowerCase()) {
       case 'pending':
-        return '#FFA500';
+        return { bg: 'rgba(255,165,0,0.15)', text: '#FFA500' };
       case 'delivered':
-        return '#4CAF50';
+        return { bg: 'rgba(76,175,80,0.15)', text: '#4CAF50' };
       case 'cancelled':
-        return '#ff6b6b';
+        return { bg: 'rgba(255,107,107,0.15)', text: '#FF6B6B' };
       default:
-        return '#888';
+        return { bg: 'rgba(136,136,136,0.15)', text: '#888' };
     }
   };
 
-  const renderOrder = ({ item }: { item: Order }) => (
-    <View style={styles.orderCard}>
-      <View style={styles.orderHeader}>
-        <Text style={styles.orderId}>Order #{item.id}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status}</Text>
+  const getStatusIcon = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return '⏳';
+      case 'delivered':
+        return '✅';
+      case 'cancelled':
+        return '❌';
+      default:
+        return '📦';
+    }
+  };
+
+  const renderOrder = ({ item }: { item: Order }) => {
+    const statusStyle = getStatusColor(item.status);
+    return (
+      <View style={styles.orderCard}>
+        <View style={styles.orderHeader}>
+          <View>
+            <Text style={styles.orderNumber}>#{item.id}</Text>
+            <Text style={styles.orderDate}>
+              {new Date(item.createdAt).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              })}
+            </Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+            <Text style={styles.statusIcon}>{getStatusIcon(item.status)}</Text>
+            <Text style={[styles.statusText, { color: statusStyle.text }]}>
+              {item.status.toUpperCase()}
+            </Text>
+          </View>
         </View>
+
+        <View style={styles.orderItems}>
+          {item.items.slice(0, 2).map((orderItem, index) => (
+            <View key={index} style={styles.itemRow}>
+              <Text style={styles.itemQuantity}>{orderItem.quantity}x</Text>
+              <Text style={styles.itemName} numberOfLines={1}>{orderItem.product.name}</Text>
+              <Text style={styles.itemPrice}>${(orderItem.quantity * orderItem.unitPrice).toFixed(2)}</Text>
+            </View>
+          ))}
+          {item.items.length > 2 && (
+            <Text style={styles.moreItems}>+{item.items.length - 2} more items</Text>
+          )}
+        </View>
+
+        <View style={styles.orderFooter}>
+          <Text style={styles.totalLabel}>Total Amount</Text>
+          <Text style={styles.totalAmount}>${item.totalAmount.toFixed(2)}</Text>
+        </View>
+
+        {item.status.toLowerCase() === 'pending' && (
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => handleCancelOrder(item.id)}
+          >
+            <Text style={styles.cancelButtonText}>Cancel Order</Text>
+          </TouchableOpacity>
+        )}
       </View>
-
-      <Text style={styles.orderDate}>
-        {new Date(item.createdAt).toLocaleDateString()}
-      </Text>
-
-      <View style={styles.orderItems}>
-        <Text style={styles.itemsLabel}>Items:</Text>
-        {item.items.map((orderItem, index) => (
-          <Text key={index} style={styles.itemText}>
-            {orderItem.quantity}x {orderItem.product.name}
-          </Text>
-        ))}
-      </View>
-
-      <View style={styles.orderFooter}>
-        <Text style={styles.totalLabel}>Total:</Text>
-        <Text style={styles.totalAmount}>${parseFloat(String(item.totalAmount)).toFixed(2)}</Text>
-      </View>
-
-      {item.status.toLowerCase() === 'pending' && (
-        <TouchableOpacity
-          style={styles.cancelButton}
-          onPress={() => handleCancelOrder(item.id)}
-        >
-          <Text style={styles.cancelButtonText}>Cancel Order</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -136,13 +166,21 @@ const OrdersScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>📦 My Orders</Text>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>📦 My Orders</Text>
+          <View style={styles.placeholder} />
+        </View>
         <Text style={styles.headerSubtitle}>Order history</Text>
       </View>
 
       {orders.length === 0 ? (
-        <View style={styles.centerContainer}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🛒</Text>
           <Text style={styles.emptyText}>No orders yet</Text>
+          <Text style={styles.emptySubtext}>You haven't placed any orders</Text>
           <TouchableOpacity
             style={styles.shopButton}
             onPress={() => navigation.navigate(ROUTES.PRODUCTS)}
@@ -156,6 +194,7 @@ const OrdersScreen: React.FC = () => {
           renderItem={renderOrder}
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
         />
       )}
     </View>
@@ -168,14 +207,37 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0a0a',
   },
   header: {
-    padding: 24,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 20,
     backgroundColor: '#111827',
-    borderBottomWidth: 4,
+    borderBottomWidth: 2,
     borderBottomColor: '#FFD700',
   },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: '#FFD700',
+  },
+  placeholder: {
+    width: 40,
+  },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFD700',
   },
   headerSubtitle: {
@@ -208,25 +270,11 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     color: '#0a0a0a',
-    fontWeight: 'bold' as const,
-  },
-  emptyText: {
-    color: '#9CA3AF',
-    fontSize: 18,
-    marginBottom: 20,
-  },
-  shopButton: {
-    backgroundColor: '#FFD700',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  shopButtonText: {
-    color: '#0a0a0a',
-    fontWeight: 'bold' as const,
+    fontWeight: 'bold',
   },
   listContent: {
     padding: 16,
+    paddingBottom: 100,
   },
   orderCard: {
     backgroundColor: '#1F2937',
@@ -234,70 +282,83 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 215, 0, 0.15)',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    borderColor: 'rgba(255,215,0,0.15)',
   },
   orderHeader: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
-  orderId: {
-    fontSize: 18,
-    fontWeight: 'bold' as const,
+  orderNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
     color: '#fff',
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold' as const,
+    marginBottom: 4,
   },
   orderDate: {
     fontSize: 12,
     color: '#9CA3AF',
-    marginBottom: 16,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 6,
+  },
+  statusIcon: {
+    fontSize: 12,
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: 'bold',
   },
   orderItems: {
     marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
   },
-  itemsLabel: {
-    fontSize: 14,
-    fontWeight: 'bold' as const,
-    color: '#FFD700',
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 8,
   },
-  itemText: {
+  itemQuantity: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFD700',
+    width: 40,
+  },
+  itemName: {
+    flex: 1,
     fontSize: 14,
     color: '#fff',
-    marginBottom: 4,
+  },
+  itemPrice: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  moreItems: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginTop: 4,
   },
   orderFooter: {
-    flexDirection: 'row' as const,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
-    paddingTop: 16,
     marginBottom: 16,
   },
   totalLabel: {
-    fontSize: 16,
-    fontWeight: 'bold' as const,
+    fontSize: 14,
     color: '#9CA3AF',
   },
   totalAmount: {
     fontSize: 20,
-    fontWeight: 'bold' as const,
+    fontWeight: 'bold',
     color: '#FFD700',
   },
   cancelButton: {
@@ -308,7 +369,40 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#fff',
-    fontWeight: 'bold' as const,
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 100,
+  },
+  emptyEmoji: {
+    fontSize: 64,
+    marginBottom: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    marginBottom: 24,
+  },
+  shopButton: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 25,
+  },
+  shopButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#0a0a0a',
   },
 });
 

@@ -9,6 +9,7 @@ export interface Product {
   category: string;
   stock: number;
   imageUrl?: string;
+  isMixedDrink?: boolean;
 }
 
 export interface Order {
@@ -84,7 +85,7 @@ const apiCall = async <T>(
 const getAuthToken = async (): Promise<string | null> => {
   try {
     const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-    return await AsyncStorage.getItem('authToken');
+    return await AsyncStorage.getItem('userToken');
   } catch (error) {
     console.error('Error getting auth token:', error);
     return null;
@@ -132,23 +133,18 @@ export const ordersApi = {
   },
 };
 
-// Customer/Profile API
+// Customer/Profile API - UPDATED to match backend
 export const customerApi = {
   getProfile: async (): Promise<Customer> => {
-    return apiCall<Customer>('/profile');
+    // Change from '/profile' to '/me'
+    return apiCall<Customer>('/me');
   },
 
   updateProfile: async (data: Partial<Customer>): Promise<Customer> => {
-    return apiCall<Customer>('/profile', {
+    // Change from '/profile' to '/me' with PATCH or PUT
+    return apiCall<Customer>('/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
-  },
-};
-
-// Categories API
-export const categoriesApi = {
-  getAll: async (): Promise<{ id: number; name: string }[]> => {
-    return apiCall<{ id: number; name: string }[]>('/categories');
   },
 };

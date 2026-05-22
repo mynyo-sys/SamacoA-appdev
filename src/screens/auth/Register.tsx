@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Text, TouchableOpacity, View, ActivityIndicator, StyleSheet, ScrollView, Image } from 'react-native';
+import {
+  Text, TouchableOpacity, View, ActivityIndicator, StyleSheet,
+  ScrollView, Image, TextInput, KeyboardAvoidingView, Platform, Dimensions
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
-
-import CustomButton from '../../components/CustomButton';
-import CustomTextInput from '../../components/CustomTextInput';
-import { ROUTES, type AuthStackParamList } from '../../types';
 import { REGISTER_REQUEST } from '../../app/reducers/authReducer';
 import type { RootState } from '../../app/reducers';
+import { ROUTES, type AuthStackParamList } from '../../types';
+
+const { width, height } = Dimensions.get('window');
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
@@ -17,18 +19,15 @@ const Register: React.FC = () => {
   const [emailAdd, setEmailAdd] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
 
   const navigation = useNavigation<RegisterScreenNavigationProp>();
   const dispatch = useDispatch();
   const { isLoading, error, registerSuccess } = useSelector((state: RootState) => state.auth);
 
-  // Log when Register screen loads
-  console.log('[SCREEN] Register screen loaded');
-
-  // Handle registration success
   useEffect(() => {
     if (registerSuccess) {
-      console.log('[SUCCESS] Registration successful, redirecting to login');
       Toast.show({
         type: 'success',
         text1: 'Registration Successful!',
@@ -40,10 +39,8 @@ const Register: React.FC = () => {
     }
   }, [registerSuccess, navigation]);
 
-  // Handle registration error
   useEffect(() => {
     if (error) {
-      console.log(`[ERROR] Registration failed: ${error}`);
       Toast.show({
         type: 'error',
         text1: 'Registration Failed',
@@ -55,13 +52,7 @@ const Register: React.FC = () => {
   }, [error]);
 
   const handleRegister = (): void => {
-    // Log button press with final values
-    console.log('[ACTION] Register button pressed');
-    console.log(`[DATA] Email: ${emailAdd}, Password entered: ${password ? 'Yes' : 'No'}`);
-
-    // Validate inputs
-    if (emailAdd === '' || password === '' || confirmPassword === '') {
-      console.log('[VALIDATION] Empty fields detected');
+    if (emailAdd === '' || password === '' || confirmPassword === '' || firstName === '' || lastName === '') {
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -73,7 +64,6 @@ const Register: React.FC = () => {
     }
 
     if (password !== confirmPassword) {
-      console.log('[VALIDATION] Passwords do not match');
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -84,124 +74,133 @@ const Register: React.FC = () => {
       return;
     }
 
-    console.log('[VALIDATION] All fields valid, dispatching REGISTER_REQUEST');
-
-    // Dispatch Redux action
     dispatch({
       type: REGISTER_REQUEST,
-      payload: { email: emailAdd, password },
+      payload: { email: emailAdd, password, first_name: firstName, last_name: lastName },
     });
   };
 
   const handleLoginPress = (): void => {
-    console.log('[ACTION] Login link pressed');
     navigation.navigate(ROUTES.LOGIN);
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.header}>
-        <View style={styles.logoContainer}>
-          {/* Replace with actual logo image: <Image source={require('../../assets/logo.png')} style={styles.logoImage} /> */}
-          <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
-        </View>
-        <Text style={styles.title}>Samaco Brewery</Text>
-        <Text style={styles.subtitle}>Create an account</Text>
-      </View>
-
-      <View style={styles.inputContainer}>
-        <CustomTextInput
-          label={'Email address'}
-          placeholder={'Enter your email'}
-          value={emailAdd}
-          onChangeText={setEmailAdd}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          containerStyle={{
-            marginBottom: 16,
-          }}
-          textStyle={{
-            backgroundColor: '#1F2937',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#374151',
-            color: '#fff',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            fontSize: 16,
-          }}
-        />
-        <CustomTextInput
-          label={'Password'}
-          placeholder={'Enter your password'}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry={true}
-          containerStyle={{
-            marginBottom: 16,
-          }}
-          textStyle={{
-            backgroundColor: '#1F2937',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#374151',
-            color: '#fff',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            fontSize: 16,
-          }}
-        />
-        <CustomTextInput
-          label={'Confirm Password'}
-          placeholder={'Confirm your password'}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry={true}
-          containerStyle={{
-            marginBottom: 16,
-          }}
-          textStyle={{
-            backgroundColor: '#1F2937',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#374151',
-            color: '#fff',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            fontSize: 16,
-          }}
-        />
-      </View>
-
-      <TouchableOpacity
-        style={styles.createAccountButton}
-        onPress={handleRegister}
-        disabled={isLoading}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.buttonContent}>
-          {isLoading ? (
-            <ActivityIndicator color="#0a0a0a" />
-          ) : (
-            <>
-              <Text style={styles.createAccountButtonText}>Create account</Text>
-              <Text style={styles.createAccountButtonIcon}>+</Text>
-            </>
-          )}
+        <View style={styles.header}>
+          <View style={styles.logoWrapper}>
+            <View style={styles.logoContainer}>
+              <Image source={require('../../../assets/images/logo.png')} style={styles.logoImage} />
+            </View>
+          </View>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Join Samaco Brewery today</Text>
         </View>
-      </TouchableOpacity>
 
-      <Text style={styles.alreadyAccountText}>Already have an account?</Text>
+        <View style={styles.formContainer}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>First Name</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>👤</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter your first name"
+                placeholderTextColor="#6B7280"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
 
-      <TouchableOpacity
-        style={styles.loginButton}
-        onPress={handleLoginPress}
-      >
-        <View style={styles.buttonContent}>
-          <Text style={styles.loginIcon}>👤</Text>
-          <Text style={styles.loginButtonText}>Login</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>👤</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter your last name"
+                placeholderTextColor="#6B7280"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email Address</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>✉️</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Enter your email"
+                placeholderTextColor="#6B7280"
+                value={emailAdd}
+                onChangeText={setEmailAdd}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Create a password"
+                placeholderTextColor="#6B7280"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={true}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <View style={styles.inputWrapper}>
+              <Text style={styles.inputIcon}>✓</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Confirm your password"
+                placeholderTextColor="#6B7280"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+              />
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.createButton, isLoading && styles.createButtonDisabled]}
+            onPress={handleRegister}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#0a0a0a" size="small" />
+            ) : (
+              <Text style={styles.createButtonText}>Create Account</Text>
+            )}
+          </TouchableOpacity>
         </View>
-      </TouchableOpacity>
-    </ScrollView>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Already have an account?</Text>
+          <TouchableOpacity onPress={handleLoginPress}>
+            <Text style={styles.signInLink}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -211,98 +210,113 @@ const styles = StyleSheet.create({
     backgroundColor: '#0a0a0a',
   },
   scrollContent: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
     flexGrow: 1,
+    paddingHorizontal: 24,
+    paddingVertical: 60,
   },
   header: {
-    width: '100%',
-    marginBottom: 40,
     alignItems: 'center',
+    marginBottom: 48,
+  },
+  logoWrapper: {
+    marginBottom: 24,
   },
   logoContainer: {
     backgroundColor: '#FFD700',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 10,
   },
   logoImage: {
-    width: 60,
-    height: 60,
+    width: 70,
+    height: 70,
     resizeMode: 'contain',
   },
-  logoText: {
-    fontSize: 40,
-  },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold' as const,
+    fontSize: 28,
+    fontWeight: 'bold',
     color: '#FFD700',
     marginBottom: 8,
+    letterSpacing: 1,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#888',
+    fontSize: 14,
+    color: '#9CA3AF',
   },
-  inputContainer: {
+  formContainer: {
     width: '100%',
+    marginBottom: 24,
+  },
+  inputGroup: {
     marginBottom: 20,
   },
-  createAccountButton: {
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#D1D5DB',
+    marginBottom: 8,
+    marginLeft: 4,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1F2937',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#374151',
+    paddingHorizontal: 16,
+  },
+  inputIcon: {
+    fontSize: 18,
+    marginRight: 12,
+  },
+  textInput: {
+    flex: 1,
+    color: '#FFFFFF',
+    fontSize: 16,
+    paddingVertical: 14,
+  },
+  createButton: {
     backgroundColor: '#FFD700',
     borderRadius: 12,
     paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
-    marginBottom: 20,
+    alignItems: 'center',
+    marginTop: 8,
     shadowColor: '#FFD700',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 8,
+    elevation: 6,
   },
-  buttonContent: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
+  createButtonDisabled: {
+    opacity: 0.7,
   },
-  createAccountButtonText: {
+  createButtonText: {
     color: '#0a0a0a',
     fontSize: 16,
-    fontWeight: 'bold' as const,
-    marginRight: 8,
+    fontWeight: 'bold',
   },
-  createAccountButtonIcon: {
-    color: '#0a0a0a',
-    fontSize: 24,
-    fontWeight: 'bold' as const,
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  alreadyAccountText: {
-    color: '#888',
+  footerText: {
+    color: '#9CA3AF',
     fontSize: 14,
-    marginBottom: 16,
-  },
-  loginButton: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#333',
-  },
-  loginIcon: {
-    fontSize: 20,
     marginRight: 8,
   },
-  loginButtonText: {
-    color: '#888',
-    fontSize: 16,
-    fontWeight: '600' as const,
+  signInLink: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 
