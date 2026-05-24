@@ -13,7 +13,7 @@ import {
   GET_USER_FAILURE,
   LOGOUT,
 } from '../reducers/authReducer';
-import { authLogin, authRegister, authMe, authLogout } from '../api/auth';
+import { authLogin, authRegister, authMe, authLogout, syncCustomerIdFromProfile } from '../api/auth';
 
 // Login Saga
 function* loginSaga(action: Action): SagaIterator {
@@ -74,6 +74,8 @@ function* getUserSaga(): SagaIterator {
     const userData = yield call(authMe);
 
     console.log('Get user response in saga:', userData);
+
+    yield call(syncCustomerIdFromProfile, userData);
 
     yield put({
       type: GET_USER_SUCCESS,

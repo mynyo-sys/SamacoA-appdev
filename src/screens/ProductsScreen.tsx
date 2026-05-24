@@ -13,7 +13,10 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { productsApi, type Product } from '../app/api/brewery';
+import { useSelector } from 'react-redux';
+import Toast from 'react-native-toast-message';
+import { ordersApi, productsApi, type Product } from '../app/api/brewery';
+import type { RootState } from '../app/reducers';
 import { ROUTES, type MainStackParamList } from '../types';
 
 const { width } = Dimensions.get('window');
@@ -29,7 +32,9 @@ const ProductsScreen: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [addingToCart, setAddingToCart] = useState<boolean>(false);
   const navigation = useNavigation<ProductsScreenNavigationProp>();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
     loadProducts();
@@ -51,6 +56,53 @@ const ProductsScreen: React.FC = () => {
       console.error('[PRODUCTS] Error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (!selectedProduct) return;
+
+    if (!isAuthenticated) {
+      Toast.show({
+        type: 'error',
+        text1: 'Login Required',
+        text2: 'Please login to place an order',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      navigation.navigate('Auth' as any, { screen: 'Login' });
+      return;
+    }
+
+    try {
+      setAddingToCart(true);
+
+      await ordersApi.create({
+        items: [{ product_id: selectedProduct.id, quantity: 1 }],
+      });
+
+      Toast.show({
+        type: 'success',
+        text1: 'Order placed',
+        text2: `${selectedProduct.name} was added to your order`,
+        position: 'top',
+        visibilityTime: 2500,
+      });
+
+      setModalVisible(false);
+      setSelectedProduct(null);
+      await loadProducts();
+    } catch (err: any) {
+      Toast.show({
+        type: 'error',
+        text1: 'Order failed',
+        text2: err.message || 'Could not place order',
+        position: 'top',
+        visibilityTime: 3000,
+      });
+      console.error('[PRODUCTS] Order error:', err);
+    } finally {
+      setAddingToCart(false);
     }
   };
 
@@ -231,10 +283,11 @@ const ProductsScreen: React.FC = () => {
                 </View>
                 <TouchableOpacity
                   style={[styles.addToCartButton, selectedProduct.stock === 0 && styles.disabledButton]}
-                  disabled={selectedProduct.stock === 0}
+                  disabled={selectedProduct.stock === 0 || addingToCart}
+                  onPress={handleAddToCart}
                 >
                   <Text style={styles.addToCartText}>
-                    {selectedProduct.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                    {addingToCart ? 'Adding...' : selectedProduct.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
                   </Text>
                 </TouchableOpacity>
               </>

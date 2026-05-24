@@ -9,11 +9,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LOGIN_REQUEST, LOGIN_SUCCESS } from '../../app/reducers/authReducer';
+import { LOGIN_REQUEST, LOGIN_SUCCESS, GET_USER_REQUEST } from '../../app/reducers/authReducer';
 import type { RootState } from '../../app/reducers';
 import { _signInWithGoogle } from '../../utils/firebase';
 import { ROUTES, type AuthStackParamList } from '../../types';
-import { API_BASE_URL } from '../../app/api/config';
+import { storeCustomerId } from '../../app/api/auth';
 
 const { width, height } = Dimensions.get('window');
 
@@ -79,48 +79,56 @@ const Login: React.FC = () => {
     try {
       const result = await _signInWithGoogle();
       
-      if (result.error) {
+      if (!result.success || !result.token) {
         Toast.show({
           type: 'error',
           text1: 'Google Sign-in Failed',
-          text2: result.error,
+          text2: result.error || 'No token received from server',
           position: 'top',
           visibilityTime: 3000,
         });
         return;
       }
-      
-      if (result.success && result.token) {
-        Toast.show({
-          type: 'success',
-          text1: 'Signed in Successfully',
-          text2: `Welcome, ${result.user?.email || 'User'}`,
-          position: 'top',
-          visibilityTime: 2000,
-        });
 
-        await AsyncStorage.setItem('userToken', result.token);
+      Toast.show({
+        type: 'success',
+        text1: 'Signed in Successfully',
+        text2: `Welcome, ${(result.user as { email?: string })?.email || 'User'}`,
+        position: 'top',
+        visibilityTime: 2000,
+      });
 
-        dispatch({
-          type: LOGIN_SUCCESS,
-          payload: {
-            token: result.token,
-            user: {
-              email: result.user?.email || 'Unknown',
-              fullName: result.user?.fullName || `${result.user?.firstName || ''} ${result.user?.lastName || ''}`.trim() || 'User',
-              id: result.user?.id,
-            },
-          },
-        });
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Google Sign-in Failed',
-          text2: 'No token received from Google',
-          position: 'top',
-          visibilityTime: 3000,
-        });
+      await AsyncStorage.setItem('userToken', result.token);
+
+      const googleUser = result.user as {
+        id?: number;
+        email?: string;
+        fullName?: string;
+        firstName?: string;
+        lastName?: string;
+        customerId?: number;
+      } | null;
+
+      if (googleUser?.customerId) {
+        await storeCustomerId(googleUser.customerId);
       }
+
+      dispatch({
+        type: LOGIN_SUCCESS,
+        payload: {
+          token: result.token,
+          user: {
+            email: googleUser?.email || 'Unknown',
+            fullName:
+              googleUser?.fullName ||
+              `${googleUser?.firstName || ''} ${googleUser?.lastName || ''}`.trim() ||
+              'User',
+            id: googleUser?.id ? String(googleUser.id) : undefined,
+          },
+        },
+      });
+
+      dispatch({ type: GET_USER_REQUEST });
     } catch (error: any) {
       console.error('Google auth error:', error);
       Toast.show({

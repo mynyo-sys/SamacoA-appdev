@@ -32,8 +32,27 @@ export async function getToken(): Promise<string | null> {
 export async function removeToken(): Promise<void> {
   try {
     await AsyncStorage.removeItem('userToken');
+    await AsyncStorage.removeItem('customerId');
   } catch (error) {
     console.log('Error removing token:', error);
+  }
+}
+
+export async function storeCustomerId(customerId: number | string): Promise<void> {
+  try {
+    await AsyncStorage.setItem('customerId', String(customerId));
+  } catch (error) {
+    console.log('Error storing customer ID:', error);
+  }
+}
+
+export async function syncCustomerIdFromProfile(userData: {
+  customer?: { id?: number };
+  customerId?: number;
+}): Promise<void> {
+  const customerId = userData.customer?.id ?? userData.customerId;
+  if (customerId) {
+    await storeCustomerId(customerId);
   }
 }
 
@@ -119,8 +138,9 @@ export async function authMe(): Promise<User> {
     console.log('User response:', data);
 
     if (response.ok) {
-      // Handle different response structures
-      return data.user || data;
+      const user = data.user || data;
+      await syncCustomerIdFromProfile(user);
+      return user;
     } else {
       if (response.status === 401) {
         await removeToken();

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from './config';
 
 // Types for Brewery API responses
@@ -63,15 +64,25 @@ const apiCall = async <T>(
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers,
     });
 
-    const data = await response.json();
+    const responseText = await response.text();
+    let data: any;
+
+    try {
+      data = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      const message = `Invalid JSON response from ${endpoint}: ${responseText.slice(0, 200)}`;
+      console.error(message, parseError);
+      throw new Error(message);
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || data.message || 'API request failed');
+      const errorMessage = data?.error || data?.message || `${response.status} ${response.statusText}`;
+      throw new Error(errorMessage);
     }
 
     return data;
@@ -84,7 +95,6 @@ const apiCall = async <T>(
 // Get auth token from storage
 const getAuthToken = async (): Promise<string | null> => {
   try {
-    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
     return await AsyncStorage.getItem('userToken');
   } catch (error) {
     console.error('Error getting auth token:', error);
@@ -92,38 +102,126 @@ const getAuthToken = async (): Promise<string | null> => {
   }
 };
 
+// Raw product shape returned by the backend
+interface RawProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category?: string | string[];
+  stockQuantity?: number;
+  stock?: number;
+  imageUrl?: string;
+  isMixedDrink?: boolean;
+}
+
+const normalizeProduct = (raw: RawProduct): Product => ({
+  id: raw.id,
+  name: raw.name,
+  description: raw.description,
+  price: raw.price,
+  category: Array.isArray(raw.category)
+    ? raw.category.join(', ')
+    : raw.category || 'Uncategorized',
+  stock: raw.stockQuantity ?? raw.stock ?? 0,
+  imageUrl: raw.imageUrl,
+  isMixedDrink: raw.isMixedDrink,
+});
+
+const unwrapList = <T>(data: T[] | { products?: T[]; orders?: T[] }): T[] => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  if (Array.isArray(data.products)) {
+    return data.products;
+  }
+  if (Array.isArray(data.orders)) {
+    return data.orders;
+  }
+  return [];
+};
+
 // Products API
 export const productsApi = {
   getAll: async (): Promise<Product[]> => {
-    return apiCall<Product[]>('/products');
+    const rawProducts = await apiCall<RawProduct[] | { products: RawProduct[] }>('/products');
+    return unwrapList(rawProducts).map(normalizeProduct);
   },
 
   getById: async (id: number): Promise<Product> => {
-    return apiCall<Product>(`/products/${id}`);
+    const rawProduct = await apiCall<RawProduct>(`/products/${id}`);
+    return normalizeProduct(rawProduct);
   },
 
   getByCategory: async (category: string): Promise<Product[]> => {
-    return apiCall<Product[]>(`/products?category=${category}`);
+    const rawProducts = await apiCall<RawProduct[]>(`/products?category=${category}`);
+    return rawProducts.map(normalizeProduct);
   },
 };
+
+interface RawOrder {
+  id: number;
+  orderNumber?: string;
+  orderDate?: string;
+  status: string;
+  totalAmount: string | number;
+  customer?: { id: number; name?: string; email?: string; fullName?: string };
+  items?: Array<{
+    id?: number;
+    productName?: string;
+    product?: Product;
+    quantity: number;
+    unitPrice: string | number;
+  }>;
+}
+
+const normalizeOrder = (raw: RawOrder): Order => ({
+  id: raw.id,
+  customer: {
+    id: raw.customer?.id ?? 0,
+    email: raw.customer?.email ?? '',
+    fullName: raw.customer?.fullName ?? raw.customer?.name ?? 'Customer',
+  },
+  items: (raw.items ?? []).map((item, index) => ({
+    id: item.id ?? index,
+    product: item.product ?? {
+      id: 0,
+      name: item.productName ?? 'Product',
+      description: '',
+      price: Number(item.unitPrice),
+      category: '',
+      stock: 0,
+    },
+    quantity: item.quantity,
+    unitPrice: Number(item.unitPrice),
+  })),
+  totalAmount: Number(raw.totalAmount),
+  status: raw.status,
+  createdAt: raw.orderDate ?? '',
+});
 
 // Orders API
 export const ordersApi = {
   getAll: async (): Promise<Order[]> => {
-    return apiCall<Order[]>('/orders');
+    const data = await apiCall<RawOrder[] | { orders: RawOrder[] }>('/orders');
+    return unwrapList(data).map(normalizeOrder);
   },
 
   getById: async (id: number): Promise<Order> => {
-    return apiCall<Order>(`/orders/${id}`);
+    const raw = await apiCall<RawOrder>(`/orders/${id}`);
+    return normalizeOrder(raw);
   },
 
   create: async (orderData: {
-    items: { productId: number; quantity: number }[];
+    items: { product_id: number; quantity: number }[];
+    customer_id?: number;
+    notes?: string;
   }): Promise<Order> => {
-    return apiCall<Order>('/orders', {
+    const raw = await apiCall<RawOrder>('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
     });
+    return normalizeOrder(raw);
   },
 
   cancel: async (id: number): Promise<Order> => {
@@ -136,12 +234,10 @@ export const ordersApi = {
 // Customer/Profile API - UPDATED to match backend
 export const customerApi = {
   getProfile: async (): Promise<Customer> => {
-    // Change from '/profile' to '/me'
     return apiCall<Customer>('/me');
   },
 
   updateProfile: async (data: Partial<Customer>): Promise<Customer> => {
-    // Change from '/profile' to '/me' with PATCH or PUT
     return apiCall<Customer>('/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
