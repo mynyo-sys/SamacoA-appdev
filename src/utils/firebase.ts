@@ -14,6 +14,13 @@ export const _signInWithGoogle = async () => {
 
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
+    // Clear cached account so the user can pick a different Gmail address
+    try {
+      await GoogleSignin.signOut();
+    } catch {
+      // ignore if not signed in
+    }
+
     const response = await GoogleSignin.signIn();
     console.log('[GOOGLE_SIGNIN] Sign-in response received');
 

@@ -81,7 +81,11 @@ const apiCall = async <T>(
     }
 
     if (!response.ok) {
-      const errorMessage = data?.error || data?.message || `${response.status} ${response.statusText}`;
+      const errorMessage =
+        data?.error ||
+        data?.message ||
+        (typeof data?.detail === 'string' ? data.detail : null) ||
+        `${response.status} ${response.statusText}`;
       throw new Error(errorMessage);
     }
 
@@ -108,21 +112,32 @@ interface RawProduct {
   name: string;
   description: string;
   price: number;
-  category?: string | string[];
+  category?: string | string[] | { id?: number; name?: string } | null;
   stockQuantity?: number;
   stock?: number;
   imageUrl?: string;
   isMixedDrink?: boolean;
 }
 
+const normalizeCategory = (category: RawProduct['category']): string => {
+  if (!category) {
+    return 'Uncategorized';
+  }
+  if (typeof category === 'string') {
+    return category;
+  }
+  if (Array.isArray(category)) {
+    return category.join(', ');
+  }
+  return category.name || 'Uncategorized';
+};
+
 const normalizeProduct = (raw: RawProduct): Product => ({
   id: raw.id,
   name: raw.name,
   description: raw.description,
   price: raw.price,
-  category: Array.isArray(raw.category)
-    ? raw.category.join(', ')
-    : raw.category || 'Uncategorized',
+  category: normalizeCategory(raw.category),
   stock: raw.stockQuantity ?? raw.stock ?? 0,
   imageUrl: raw.imageUrl,
   isMixedDrink: raw.isMixedDrink,
