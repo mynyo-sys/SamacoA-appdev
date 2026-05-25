@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { customerApi, type Customer } from '../app/api/brewery';
+import { getOrders } from '../utils/cartStorage';
 import type { RootState } from '../app/reducers';
 import { LOGOUT } from '../app/reducers/authReducer';
 import type { MainStackParamList } from '../types';
@@ -27,9 +28,12 @@ const ProfileScreen: React.FC = () => {
   const [customerData, setCustomerData] = useState<Customer | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
+  const [totalSpent, setTotalSpent] = useState<number>(0);
 
   useEffect(() => {
     loadProfile();
+    loadStats();
   }, []);
 
   const loadProfile = async () => {
@@ -46,8 +50,23 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
+  const loadStats = async () => {
+    try {
+      const orders = await getOrders();
+      setTotalOrders(orders.length);
+      const spent = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+      setTotalSpent(spent);
+    } catch (err: any) {
+      console.error('[PROFILE] Load stats error:', err);
+    }
+  };
+
   const handleLogout = (): void => {
     dispatch({ type: LOGOUT });
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'Home' as any }],
+    });
   };
 
   if (loading) {
@@ -139,16 +158,12 @@ const ProfileScreen: React.FC = () => {
         <Text style={styles.statsTitle}>Account Stats</Text>
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{totalOrders}</Text>
             <Text style={styles.statLabel}>Total Orders</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>₱0</Text>
+            <Text style={styles.statValue}>₱{totalSpent.toFixed(2)}</Text>
             <Text style={styles.statLabel}>Total Spent</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>0</Text>
-            <Text style={styles.statLabel}>Reviews</Text>
           </View>
         </View>
       </View>

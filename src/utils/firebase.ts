@@ -5,7 +5,7 @@ import {
 import { API_BASE_URL } from '../app/api/config';
 
 GoogleSignin.configure({
-  webClientId: '673892684199-evepoqt3sjv3bjl1gpmaemc5mcrn6ueb.apps.googleusercontent.com',
+  webClientId: '317197442052-0vlbmcdmgl429o8hvsi5i1hlphujl23a.apps.googleusercontent.com',
 });
 
 export const _signInWithGoogle = async () => {
@@ -50,15 +50,13 @@ export const _signInWithGoogle = async () => {
       };
     }
 
-    const backendResponse = await fetch(`${API_BASE_URL}/google-auth`, {
+    const backendResponse = await fetch(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         idToken,
-        email: user.email,
-        name: user.name ?? `${user.givenName ?? ''} ${user.familyName ?? ''}`.trim(),
       }),
     });
 

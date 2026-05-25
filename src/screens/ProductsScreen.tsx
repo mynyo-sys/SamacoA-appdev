@@ -15,7 +15,8 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
-import { ordersApi, productsApi, type Product } from '../app/api/brewery';
+import { productsApi, type Product } from '../app/api/brewery';
+import { addToCart } from '../utils/cartStorage';
 import type { RootState } from '../app/reducers';
 import { ROUTES, type MainStackParamList } from '../types';
 
@@ -66,7 +67,7 @@ const ProductsScreen: React.FC = () => {
       Toast.show({
         type: 'error',
         text1: 'Login Required',
-        text2: 'Please login to place an order',
+        text2: 'Please login to add items to cart',
         position: 'top',
         visibilityTime: 3000,
       });
@@ -77,30 +78,36 @@ const ProductsScreen: React.FC = () => {
     try {
       setAddingToCart(true);
 
-      await ordersApi.create({
-        items: [{ product_id: selectedProduct.id, quantity: 1 }],
-      });
+      await addToCart(selectedProduct, 1);
+
+      const updatedProducts = products.map(p => 
+        p.id === selectedProduct.id 
+          ? { ...p, stock: Math.max(0, p.stock - 1) }
+          : p
+      );
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts);
 
       Toast.show({
         type: 'success',
-        text1: 'Order placed',
-        text2: `${selectedProduct.name} was added to your order`,
+        text1: 'Added to Cart',
+        text2: `${selectedProduct.name} added to your cart`,
         position: 'top',
         visibilityTime: 2500,
       });
 
       setModalVisible(false);
       setSelectedProduct(null);
-      await loadProducts();
+      navigation.navigate(ROUTES.ORDERS);
     } catch (err: any) {
       Toast.show({
         type: 'error',
-        text1: 'Order failed',
-        text2: err.message || 'Could not place order',
+        text1: 'Add to Cart Failed',
+        text2: err.message || 'Could not add item to cart',
         position: 'top',
         visibilityTime: 3000,
       });
-      console.error('[PRODUCTS] Order error:', err);
+      console.error('[PRODUCTS] Add to cart error:', err);
     } finally {
       setAddingToCart(false);
     }
@@ -388,8 +395,9 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
   },
   categoryChipText: {
-    fontSize: 14,
-    color: '#9CA3AF',
+    fontSize: 13,
+    color: '#fff',
+    fontWeight: '500',
   },
   categoryChipTextActive: {
     color: '#0a0a0a',
