@@ -4,8 +4,10 @@ import {
 } from '@react-native-google-signin/google-signin';
 import { API_BASE_URL } from '../app/api/config';
 
+// Web client from Firebase project - must match backend GOOGLE_CLIENT_ID
 GoogleSignin.configure({
-  webClientId: '317197442052-0vlbmcdmgl429o8hvsi5i1hlphujl23a.apps.googleusercontent.com',
+  webClientId:
+    '673892684199-evepoqt3sjv3bjl1gpmaemc5mcrn6ueb.apps.googleusercontent.com',
 });
 
 export const _signInWithGoogle = async () => {
@@ -50,6 +52,7 @@ export const _signInWithGoogle = async () => {
       };
     }
 
+    console.log('[GOOGLE_SIGNIN] Calling backend:', `${API_BASE_URL}/auth/google`);
     const backendResponse = await fetch(`${API_BASE_URL}/auth/google`, {
       method: 'POST',
       headers: {
@@ -61,6 +64,9 @@ export const _signInWithGoogle = async () => {
     });
 
     const responseText = await backendResponse.text();
+    console.log('[GOOGLE_SIGNIN] Backend response text:', responseText);
+    console.log('[GOOGLE_SIGNIN] Backend status:', backendResponse.status);
+
     let data: {
       success?: boolean;
       token?: string;
@@ -79,7 +85,7 @@ export const _signInWithGoogle = async () => {
       };
     }
 
-    console.log('[GOOGLE_SIGNIN] Backend status:', backendResponse.status);
+    console.log('[GOOGLE_SIGNIN] Parsed data:', data);
 
     if (!backendResponse.ok || !data.success || !data.token) {
       return {

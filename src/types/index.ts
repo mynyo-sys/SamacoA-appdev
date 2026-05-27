@@ -56,8 +56,8 @@ export interface AuthLoginParams {
 export interface AuthRegisterParams {
   email: string;
   password: string;
-  first_name?: string;
-  last_name?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 // ========== NAVIGATION TYPES ==========

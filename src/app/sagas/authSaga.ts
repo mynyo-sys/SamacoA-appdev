@@ -48,8 +48,8 @@ function* loginSaga(action: Action): SagaIterator {
 function* registerSaga(action: Action): SagaIterator {
   console.log('registerSaga started with:', action.payload);
   try {
-    const { email, password } = action.payload || {};
-    const result = yield call(authRegister, { email, password });
+    const { email, password, firstName, lastName } = action.payload || {};
+    const result = yield call(authRegister, { email, password, firstName, lastName });
 
     console.log('Register response in saga:', result);
 

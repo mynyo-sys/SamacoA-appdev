@@ -87,14 +87,14 @@ export async function authLogin({ email, password }: AuthLoginParams): Promise<{
 }
 
 // Register API call
-export async function authRegister({ email, password, first_name, last_name }: AuthRegisterParams): Promise<any> {
+export async function authRegister({ email, password, firstName, lastName }: AuthRegisterParams): Promise<any> {
   try {
-    console.log('Attempting registration with:', { email, password, first_name, last_name });
+    console.log('Attempting registration with:', { email, password, firstName, lastName });
 
     const response = await fetch(`${BASE_URL}/register`, {
       method: 'POST',
       ...defaultOptions,
-      body: JSON.stringify({ email, password, first_name, last_name }),
+      body: JSON.stringify({ email, password, firstName, lastName }),
     });
 
     const data = await response.json();
@@ -179,5 +179,30 @@ export async function authLogout(): Promise<{ success: boolean }> {
   } catch (error) {
     console.log('Logout error:', error);
     return { success: true }; // Still return success even if API fails
+  }
+}
+
+// Resend verification email
+export async function resendVerification(email: string): Promise<any> {
+  try {
+    console.log('Resending verification email for:', email);
+
+    const response = await fetch(`${BASE_URL}/api/resend-verification`, {
+      method: 'POST',
+      ...defaultOptions,
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+    console.log('Resend verification response:', data);
+
+    if (response.ok) {
+      return data;
+    } else {
+      throw new Error(data.error || data.message || 'Failed to resend verification email');
+    }
+  } catch (error) {
+    console.log('Resend verification error:', error);
+    throw error;
   }
 }

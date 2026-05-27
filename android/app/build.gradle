@@ -1,8 +1,9 @@
 apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
-apply plugin: 'com.google.gms.google-services' 
-apply plugin: 'com.google.firebase.crashlytics' 
+// Temporarily disabled Firebase to fix crash
+// apply plugin: 'com.google.gms.google-services' 
+// apply plugin: 'com.google.firebase.crashlytics' 
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -54,9 +55,6 @@ react {
 
     /* Autolinking */
     autolinkLibrariesWithApp()
-
-    /* New Architecture (disabled) */
-    newArchEnabled = false
 }
 
 /**
