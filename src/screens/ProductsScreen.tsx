@@ -9,7 +9,9 @@ import {
   StyleSheet,
   Dimensions,
   TextInput,
-  Modal
+  Modal,
+  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -20,7 +22,7 @@ import { addToCart } from '../utils/cartStorage';
 import type { RootState } from '../app/reducers';
 import { ROUTES, type MainStackParamList } from '../types';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 type ProductsScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Products'>;
 
@@ -166,7 +168,7 @@ const ProductsScreen: React.FC = () => {
           {item.description}
         </Text>
         <View style={styles.productFooter}>
-          <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+          <Text style={styles.productPrice}>₱{item.price.toFixed(2)}</Text>
           <Text style={[styles.productStock, item.stock > 0 ? styles.inStock : styles.outOfStock]}>
             {item.stock > 0 ? `${item.stock} left` : 'Sold Out'}
           </Text>
@@ -196,70 +198,77 @@ const ProductsScreen: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>🍺 Our Products</Text>
-          <View style={styles.placeholder} />
-        </View>
-        <Text style={styles.headerSubtitle}>Browse our selection of craft beers</Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
-            placeholderTextColor="#6B7280"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery !== '' && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearIcon}>✕</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#111827" />
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+              <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={(item) => item}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoriesContainer}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.categoryChip, selectedCategory === item && styles.categoryChipActive]}
-            onPress={() => setSelectedCategory(item)}
-          >
-            <Text style={[styles.categoryChipText, selectedCategory === item && styles.categoryChipTextActive]}>
-              {item}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-
-      <FlatList
-        data={filteredProducts}
-        renderItem={renderProduct}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.listContent}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>😢</Text>
-            <Text style={styles.emptyText}>No products found</Text>
-            <Text style={styles.emptySubtext}>Try adjusting your search</Text>
+            <Text style={styles.headerTitle}>🍺 Our Products</Text>
+            <View style={styles.placeholder} />
           </View>
-        )}
-      />
+          <Text style={styles.headerSubtitle}>Browse our selection of craft beers</Text>
+        </View>
+
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Text style={styles.searchIcon}>🔍</Text>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search products..."
+              placeholderTextColor="#6B7280"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+            {searchQuery !== '' && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <Text style={styles.clearIcon}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* Categories Horizontal Scroll - Fixed */}
+        <View style={styles.categoriesWrapper}>
+          <FlatList
+            horizontal
+            data={categories}
+            keyExtractor={(item) => item}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.categoryChip, selectedCategory === item && styles.categoryChipActive]}
+                onPress={() => setSelectedCategory(item)}
+              >
+                <Text style={[styles.categoryChipText, selectedCategory === item && styles.categoryChipTextActive]}>
+                  {item}
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+
+        {/* Products Grid - Fixed with proper height */}
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProduct}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.listContent}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyEmoji}>😢</Text>
+              <Text style={styles.emptyText}>No products found</Text>
+              <Text style={styles.emptySubtext}>Try adjusting your search</Text>
+            </View>
+          )}
+        />
+      </View>
 
       {/* Product Detail Modal */}
       <Modal
@@ -283,7 +292,7 @@ const ProductsScreen: React.FC = () => {
                 <Text style={styles.modalCategory}>{selectedProduct.category}</Text>
                 <Text style={styles.modalDescription}>{selectedProduct.description}</Text>
                 <View style={styles.modalFooter}>
-                  <Text style={styles.modalPrice}>${selectedProduct.price.toFixed(2)}</Text>
+                  <Text style={styles.modalPrice}>₱{selectedProduct.price.toFixed(2)}</Text>
                   <Text style={[styles.modalStock, selectedProduct.stock > 0 ? styles.inStock : styles.outOfStock]}>
                     {selectedProduct.stock > 0 ? `${selectedProduct.stock} in stock` : 'Out of stock'}
                   </Text>
@@ -302,19 +311,23 @@ const ProductsScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#0a0a0a',
+  },
   container: {
     flex: 1,
     backgroundColor: '#0a0a0a',
   },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 16,
+    paddingBottom: 16,
     backgroundColor: '#111827',
     borderBottomWidth: 2,
     borderBottomColor: '#FFD700',
@@ -341,18 +354,19 @@ const styles = StyleSheet.create({
     width: 40,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFD700',
   },
   headerSubtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#9CA3AF',
     marginTop: 4,
   },
   searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#0a0a0a',
   },
   searchBox: {
     flexDirection: 'row',
@@ -371,22 +385,25 @@ const styles = StyleSheet.create({
     flex: 1,
     color: '#fff',
     fontSize: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
   },
   clearIcon: {
     fontSize: 18,
     color: '#9CA3AF',
   },
+  categoriesWrapper: {
+    backgroundColor: '#0a0a0a',
+    paddingBottom: 8,
+  },
   categoriesContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    gap: 8,
   },
   categoryChip: {
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 20,
     backgroundColor: '#1F2937',
-    marginHorizontal: 4,
     borderWidth: 1,
     borderColor: '#374151',
   },
@@ -433,12 +450,13 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 12,
     paddingBottom: 100,
+    paddingTop: 8,
   },
   row: {
     justifyContent: 'space-between',
   },
   productCard: {
-    width: (width - 48) / 2,
+    width: (width - 40) / 2,
     marginBottom: 16,
     backgroundColor: '#1F2937',
     borderRadius: 16,
@@ -510,6 +528,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#9CA3AF',
     marginBottom: 8,
+    lineHeight: 14,
   },
   productFooter: {
     flexDirection: 'row',
