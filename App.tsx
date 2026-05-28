@@ -7,7 +7,6 @@ import Toast from 'react-native-toast-message';
 import { store, persistor } from './src/app/store';
 import RootNav from './src/navigations/RootNav';
 import { pushNotificationService } from './src/utils/pushNotification';
-import { handleFCMMessage, fcmEventEmitter } from './src/utils/fcmEventEmitter';
 
 LogBox.ignoreLogs([
   'Deep imports from the \'react-native\' package are deprecated',
@@ -33,14 +32,11 @@ const App: React.FC = () => {
         pushNotificationService.listenToForegroundMessages(remoteMessage => {
           console.log('[App] Foreground FCM message:', remoteMessage);
           
-          // Process the FCM message through event emitter
-          const fcmEvent = handleFCMMessage(remoteMessage);
-          
           // Show toast notification for foreground messages
           Toast.show({
             type: 'info',
-            text1: fcmEvent.notification?.title || 'Notification',
-            text2: fcmEvent.notification?.body || '',
+            text1: remoteMessage.notification?.title || 'Notification',
+            text2: remoteMessage.notification?.body || '',
             position: 'top',
           });
         });
@@ -48,8 +44,6 @@ const App: React.FC = () => {
         // Listen to notification opens
         pushNotificationService.listenToNotificationOpen(remoteMessage => {
           console.log('[App] Notification opened:', remoteMessage);
-          // Process the FCM message through event emitter
-          handleFCMMessage(remoteMessage);
         });
 
         // Listen to token refresh

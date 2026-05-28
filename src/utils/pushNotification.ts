@@ -136,7 +136,7 @@ class PushNotificationService {
       }
 
       console.log('[FCM] Registering token with backend...');
-      const response = await fetch(`${backendUrl}/api/fcm/register`, {
+      const response = await fetch(`${backendUrl}/api/customer/fcm/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ class PushNotificationService {
       });
 
       if (response.ok) {
-        console.log('[FCM] Token registered successfully');
+        console.log('[FCM] Token registered successfully with customer');
       } else {
         console.error('[FCM] Failed to register token:', response.status);
       }

@@ -14,7 +14,6 @@ import { useSelector } from 'react-redux';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
 import type { RootState } from '../app/reducers';
-import { fcmEventEmitter } from '../utils/fcmEventEmitter';
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -30,23 +29,6 @@ const OrdersScreen: React.FC = () => {
       loadOrders();
     }, [])
   );
-
-  // Listen to FCM order updates
-  useEffect(() => {
-    console.log('[ORDERS SCREEN] Setting up FCM listener for order updates');
-    
-    const handleOrderUpdate = () => {
-      console.log('[ORDERS SCREEN] Received FCM order update notification, reloading orders...');
-      Toast.show({
-        type: 'success',
-        text1: 'Order Updated',
-        text2: 'Your order has been updated',
-        position: 'top',
-        visibilityTime: 2000,
-      });
-      loadOrders();
-    };
-  }, []);
 
   const loadOrders = async () => {
     try {
