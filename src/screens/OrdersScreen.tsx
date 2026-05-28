@@ -27,13 +27,6 @@ const OrdersScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       loadOrders();
-
-      // Smart polling - only refresh if order status changes
-      const interval = setInterval(() => {
-        loadOrders();
-      }, 5000);
-
-      return () => clearInterval(interval);
     }, [])
   );
 
