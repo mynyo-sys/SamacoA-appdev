@@ -294,6 +294,14 @@ const HomeScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
 
+            <TouchableOpacity style={styles.actionCard} onPress={handleOrdersPress}>
+              <View style={styles.actionIconContainer}>
+                <Text style={styles.actionIcon}>📦</Text>
+              </View>
+              <Text style={styles.actionTitle}>My Orders</Text>
+              <Text style={styles.actionSubtitle}>View order history</Text>
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.actionCard} onPress={handleProfilePress}>
               <View style={styles.actionIconContainer}>
                 <Text style={styles.actionIcon}>👤</Text>
