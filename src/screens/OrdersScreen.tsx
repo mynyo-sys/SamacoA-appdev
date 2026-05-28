@@ -10,8 +10,10 @@ import {
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
+import { useSelector } from 'react-redux';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
+import type { RootState } from '../app/reducers';
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -20,6 +22,7 @@ const OrdersScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<OrdersScreenNavigationProp>();
+  const email = useSelector((state: RootState) => state.auth?.user?.email || '');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -50,7 +53,7 @@ const OrdersScreen: React.FC = () => {
 
   const handleCancelOrder = async (orderId: number) => {
     try {
-      await ordersApi.cancel(orderId);
+      await ordersApi.cancel(orderId, email);
       Toast.show({
         type: 'success',
         text1: 'Order Cancelled',

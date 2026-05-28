@@ -232,9 +232,10 @@ export const ordersApi = {
     return normalizeOrder(raw);
   },
 
-  cancel: async (id: number): Promise<Order> => {
+  cancel: async (id: number, email: string): Promise<Order> => {
     return apiCall<Order>(`/api/orders/${id}/cancel`, {
       method: 'PATCH',
+      body: JSON.stringify({ email }),
     });
   },
 };
