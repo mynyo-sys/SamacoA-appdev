@@ -7,11 +7,14 @@ import Toast from 'react-native-toast-message';
 import { store, persistor } from './src/app/store';
 import RootNav from './src/navigations/RootNav';
 import { pushNotificationService } from './src/utils/pushNotification';
+import { handleFCMMessage, fcmEventEmitter } from './src/utils/fcmEventEmitter';
 
 LogBox.ignoreLogs([
   'Deep imports from the \'react-native\' package are deprecated',
   'InteractionManager has been deprecated',
 ]);
+
+let previousEmail = '';
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -21,45 +24,32 @@ const App: React.FC = () => {
         console.log('[App] Initializing FCM...');
         const token = await pushNotificationService.requestUserPermission();
 
-        // Register token with backend
-        if (token) {
-          const state = store.getState();
-          const email = state.auth?.user?.email || '';
-          if (email) {
-            pushNotificationService.registerTokenWithBackend(
-              'https://webdev2-staging.up.railway.app',
-              email
-            );
-          }
+        if (!token) {
+          console.log('[App] Failed to get FCM token');
+          return;
         }
 
         // Listen to foreground messages
         pushNotificationService.listenToForegroundMessages(remoteMessage => {
           console.log('[App] Foreground FCM message:', remoteMessage);
+          
+          // Process the FCM message through event emitter
+          const fcmEvent = handleFCMMessage(remoteMessage);
+          
           // Show toast notification for foreground messages
           Toast.show({
             type: 'info',
-            text1: remoteMessage.notification?.title || 'Notification',
-            text2: remoteMessage.notification?.body || '',
+            text1: fcmEvent.notification?.title || 'Notification',
+            text2: fcmEvent.notification?.body || '',
             position: 'top',
           });
-
-          // Refresh orders if it's an order status update
-          if (remoteMessage.data?.type === 'order_status') {
-            console.log('[App] Order status changed, refreshing orders...');
-            // Dispatch action to refresh orders
-            store.dispatch({ type: 'REFRESH_ORDERS' });
-          }
         });
 
         // Listen to notification opens
         pushNotificationService.listenToNotificationOpen(remoteMessage => {
           console.log('[App] Notification opened:', remoteMessage);
-          // Handle navigation based on notification data
-          if (remoteMessage.data?.orderId) {
-            // Navigate to order details (you can implement this)
-            console.log('[App] Navigate to order:', remoteMessage.data.orderId);
-          }
+          // Process the FCM message through event emitter
+          handleFCMMessage(remoteMessage);
         });
 
         // Listen to token refresh
@@ -75,12 +65,51 @@ const App: React.FC = () => {
             );
           }
         });
+
+        // Subscribe to store changes to detect login
+        const unsubscribe = store.subscribe(() => {
+          const state = store.getState();
+          const currentEmail = state.auth?.user?.email || '';
+          
+          // If email changed (user logged in or logged out)
+          if (currentEmail !== previousEmail) {
+            previousEmail = currentEmail;
+            
+            if (currentEmail) {
+              console.log('[App] User logged in or email changed, registering FCM token:', currentEmail);
+              pushNotificationService.registerTokenWithBackend(
+                'https://webdev2-staging.up.railway.app',
+                currentEmail
+              );
+            } else {
+              console.log('[App] User logged out');
+            }
+          }
+        });
+
+        // Try to register immediately if user is already logged in
+        const initialState = store.getState();
+        const initialEmail = initialState.auth?.user?.email || '';
+        if (initialEmail) {
+          console.log('[App] User already logged in, registering FCM token:', initialEmail);
+          previousEmail = initialEmail;
+          pushNotificationService.registerTokenWithBackend(
+            'https://webdev2-staging.up.railway.app',
+            initialEmail
+          );
+        }
+
+        return unsubscribe;
       } catch (error) {
         console.error('[App] FCM initialization error:', error);
       }
     };
 
-    initializeFCM();
+    let unsubscribe: (() => void) | undefined;
+
+    (async () => {
+      unsubscribe = await initializeFCM();
+    })();
 
     // Handle app state changes (foreground/background)
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
@@ -95,6 +124,9 @@ const App: React.FC = () => {
     return () => {
       subscription.remove();
       pushNotificationService.stopListening();
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, []);
 
