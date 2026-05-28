@@ -11,7 +11,7 @@ import { LOGOUT } from '../app/reducers/authReducer';
 import type { RootState } from '../app/reducers';
 import type { MainStackParamList } from '../types';
 import { ROUTES } from '../types';
-import { connectToBreweryTopics, subscribeToOrderUpdates } from '../utils/mercure';
+import { getCartItemCount } from '../utils/cartStorage';
 
 const { width, height } = Dimensions.get('window');
 
@@ -22,25 +22,17 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<HomeScreenNavigationProp>();
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
   const slideAnim = useState(new Animated.Value(-width))[0];
 
   useEffect(() => {
-    if (isAuthenticated) {
-      console.log('[SYNC] Starting polling-based sync for brewery topics');
-      connectToBreweryTopics();
-      const unsubscribe = subscribeToOrderUpdates((orderData) => {
-        console.log('[SYNC] Order update received:', orderData);
-        Toast.show({
-          type: 'info',
-          text1: 'Order Update',
-          text2: 'Your order status has changed',
-          position: 'top',
-          visibilityTime: 3000,
-        });
-      });
-      return () => unsubscribe();
-    }
-  }, [isAuthenticated]);
+    loadCartCount();
+  }, []);
+
+  const loadCartCount = async () => {
+    const count = await getCartItemCount();
+    setCartItemCount(count);
+  };
 
   const openMenu = () => {
     setMenuVisible(true);
@@ -76,6 +68,21 @@ const HomeScreen: React.FC = () => {
     closeMenu();
   };
 
+  const handleCartPress = () => {
+    if (cartItemCount === 0) {
+      Toast.show({
+        type: 'info',
+        text1: 'Cart is Empty',
+        text2: 'Add some products to your cart first',
+        position: 'top',
+        visibilityTime: 2000,
+      });
+      return;
+    }
+    navigation.navigate(ROUTES.CART as any);
+    closeMenu();
+  };
+
   const handleOrdersPress = () => {
     if (!isAuthenticated) {
       Toast.show({
@@ -85,7 +92,6 @@ const HomeScreen: React.FC = () => {
         position: 'top',
         visibilityTime: 3000,
       });
-      navigation.navigate('Auth' as any, { screen: 'Login' });
       closeMenu();
       return;
     }
@@ -122,19 +128,26 @@ const HomeScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header with Burger Menu */}
+      {/* Header with Burger Menu and Cart Button */}
       <View style={styles.header}>
         <TouchableOpacity onPress={openMenu} style={styles.menuButton}>
           <View style={styles.menuIcon}>
             <View style={styles.menuLine} />
-            <View style={[styles.menuLine, { width: 20 }]} />
-            <View style={[styles.menuLine, { width: 16 }]} />
+            <View style={[styles.menuLine, styles.menuLineShort]} />
+            <View style={[styles.menuLine, styles.menuLineShorter]} />
           </View>
         </TouchableOpacity>
         <View style={styles.headerLogo}>
           <Image source={require('../../assets/images/logo.png')} style={styles.headerLogoImage} />
         </View>
-        <View style={styles.placeholder} />
+        <TouchableOpacity onPress={handleCartPress} style={styles.cartButton}>
+          <Text style={styles.cartIcon}>🛒</Text>
+          {cartItemCount > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
 
       {/* Drawer Menu */}
@@ -182,6 +195,16 @@ const HomeScreen: React.FC = () => {
             <TouchableOpacity style={styles.drawerItem} onPress={handleProductsPress}>
               <Text style={styles.drawerItemIcon}>🍺</Text>
               <Text style={styles.drawerItemText}>Browse Products</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.drawerItem} onPress={handleCartPress}>
+              <Text style={styles.drawerItemIcon}>🛒</Text>
+              <Text style={styles.drawerItemText}>My Cart</Text>
+              {cartItemCount > 0 && (
+                <View style={styles.drawerCartBadge}>
+                  <Text style={styles.drawerCartBadgeText}>{cartItemCount}</Text>
+                </View>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.drawerItem} onPress={handleOrdersPress}>
@@ -261,12 +284,14 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.actionSubtitle}>Browse our selection</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard} onPress={handleOrdersPress}>
+            <TouchableOpacity style={styles.actionCard} onPress={handleCartPress}>
               <View style={styles.actionIconContainer}>
-                <Text style={styles.actionIcon}>📦</Text>
+                <Text style={styles.actionIcon}>🛒</Text>
               </View>
-              <Text style={styles.actionTitle}>Orders</Text>
-              <Text style={styles.actionSubtitle}>View order history</Text>
+              <Text style={styles.actionTitle}>Cart</Text>
+              <Text style={styles.actionSubtitle}>
+                {cartItemCount > 0 ? `${cartItemCount} item(s)` : 'View your cart'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.actionCard} onPress={handleProfilePress}>
@@ -314,6 +339,12 @@ const styles = StyleSheet.create({
     borderRadius: 1,
     marginBottom: 4,
   },
+  menuLineShort: {
+    width: 20,
+  },
+  menuLineShorter: {
+    width: 16,
+  },
   headerLogo: {
     alignItems: 'center',
   },
@@ -322,8 +353,34 @@ const styles = StyleSheet.create({
     height: 40,
     resizeMode: 'contain',
   },
-  placeholder: {
+  cartButton: {
     width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  cartIcon: {
+    fontSize: 20,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -442,6 +499,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '500',
+  },
+  drawerCartBadge: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    marginLeft: 8,
+  },
+  drawerCartBadgeText: {
+    fontSize: 11,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   drawerLogoutItem: {
     flexDirection: 'row',

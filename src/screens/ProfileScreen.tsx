@@ -6,18 +6,16 @@ import {
   StyleSheet,
   ScrollView,
   ActivityIndicator,
-  Dimensions,
+  FlatList,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useDispatch, useSelector } from 'react-redux';
 import { customerApi, type Customer } from '../app/api/brewery';
-import { getOrders } from '../utils/cartStorage';
+import { getOrders, type Order } from '../utils/cartStorage';
 import type { RootState } from '../app/reducers';
 import { LOGOUT } from '../app/reducers/authReducer';
-import type { MainStackParamList } from '../types';
-
-const { width } = Dimensions.get('window');
+import { ROUTES, type MainStackParamList } from '../types';
 
 type ProfileScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Profile'>;
 
@@ -30,11 +28,8 @@ const ProfileScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [totalOrders, setTotalOrders] = useState<number>(0);
   const [totalSpent, setTotalSpent] = useState<number>(0);
+  const [orders, setOrders] = useState<Order[]>([]);
 
-  useEffect(() => {
-    loadProfile();
-    loadStats();
-  }, []);
 
   const loadProfile = async () => {
     try {
@@ -52,21 +47,26 @@ const ProfileScreen: React.FC = () => {
 
   const loadStats = async () => {
     try {
-      const orders = await getOrders();
-      setTotalOrders(orders.length);
-      const spent = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+      const ordersData = await getOrders();
+      setOrders(ordersData);
+      setTotalOrders(ordersData.length);
+      const spent = ordersData.reduce((sum, order) => sum + order.totalAmount, 0);
       setTotalSpent(spent);
     } catch (err: any) {
       console.error('[PROFILE] Load stats error:', err);
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfile();
+      loadStats();
+    }, [])
+  );
+
   const handleLogout = (): void => {
     dispatch({ type: LOGOUT });
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Home' as any }],
-    });
+    // Navigation is handled by RootNav based on isAuthenticated state
   };
 
   if (loading) {
@@ -166,6 +166,48 @@ const ProfileScreen: React.FC = () => {
             <Text style={styles.statLabel}>Total Spent</Text>
           </View>
         </View>
+      </View>
+
+      <View style={styles.ordersSection}>
+        <View style={styles.ordersHeader}>
+          <Text style={styles.ordersTitle}>Order History</Text>
+          <TouchableOpacity onPress={() => navigation.navigate(ROUTES.ORDERS)}>
+            <Text style={styles.viewAllText}>View All</Text>
+          </TouchableOpacity>
+        </View>
+        
+        {orders.length === 0 ? (
+          <View style={styles.emptyOrders}>
+            <Text style={styles.emptyOrdersText}>No orders yet</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={orders.slice(0, 5)}
+            keyExtractor={(item) => String(item.id)}
+            renderItem={({ item }) => (
+              <View style={styles.orderCard}>
+                <View style={styles.orderCardHeader}>
+                  <Text style={styles.orderNumber}>#{item.id}</Text>
+                  <Text style={[
+                    styles.orderStatus,
+                    { color: item.status === 'completed' ? '#4CAF50' : item.status === 'cancelled' ? '#EF4444' : '#FFA500' }
+                  ]}>
+                    {item.status.toUpperCase()}
+                  </Text>
+                </View>
+                <Text style={styles.orderDate}>
+                  {new Date(item.createdAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}
+                </Text>
+                <Text style={styles.orderTotal}>₱{item.totalAmount.toFixed(2)}</Text>
+              </View>
+            )}
+            scrollEnabled={false}
+          />
+        )}
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
@@ -389,6 +431,68 @@ const styles = StyleSheet.create({
     color: '#EF4444',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  ordersSection: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+  },
+  ordersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  ordersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FFD700',
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+  },
+  emptyOrders: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyOrdersText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  orderCard: {
+    backgroundColor: '#111827',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,215,0,0.15)',
+  },
+  orderCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  orderNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  orderStatus: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  orderDate: {
+    fontSize: 12,
+    color: '#9CA3AF',
+    marginBottom: 4,
+  },
+  orderTotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFD700',
   },
 });
 

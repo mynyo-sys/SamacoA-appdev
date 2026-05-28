@@ -8,10 +8,12 @@ import HomeScreen from '../screens/HomeScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
+import CartScreen from '../screens/CartScreen';
+import AuthNavigation from './AuthNav';
 
 const Stack = createStackNavigator<MainStackParamList>();
 
-const MainNavigation: React.FC = () => {
+const MainNav: React.FC = () => {
   return (
     <Stack.Navigator initialRouteName={ROUTES.HOME}>
       <Stack.Screen
@@ -34,8 +36,18 @@ const MainNavigation: React.FC = () => {
         component={ProfileScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen
+        name={ROUTES.CART}
+        component={CartScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={ROUTES.AUTH}
+        component={AuthNavigation}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 };
 
-export default MainNavigation;
+export default MainNav;

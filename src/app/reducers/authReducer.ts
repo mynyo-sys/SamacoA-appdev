@@ -1,4 +1,4 @@
-import type { AuthState, Action, LoginSuccessPayload, User } from '../../types';
+import type { AuthState, Action, User } from '../../types';
 
 // ========== ACTION TYPES ==========
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';

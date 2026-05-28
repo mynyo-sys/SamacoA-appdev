@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Text, TouchableOpacity, View, ActivityIndicator, StyleSheet,
-  ScrollView, Image, TextInput, KeyboardAvoidingView, Platform, Dimensions
+  ScrollView, Image, TextInput, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -11,8 +11,6 @@ import { REGISTER_REQUEST } from '../../app/reducers/authReducer';
 import type { RootState } from '../../app/reducers';
 import { ROUTES, type AuthStackParamList } from '../../types';
 import { resendVerification } from '../../app/api/auth';
-
-const { width, height } = Dimensions.get('window');
 
 type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 

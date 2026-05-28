@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Alert, Text, TouchableOpacity, View, ActivityIndicator,
+  Text, TouchableOpacity, View, ActivityIndicator,
   StyleSheet, Image, ScrollView, TextInput, KeyboardAvoidingView,
-  Platform, Dimensions
+  Platform
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,8 +14,6 @@ import type { RootState } from '../../app/reducers';
 import { _signInWithGoogle } from '../../utils/firebase';
 import { ROUTES, type AuthStackParamList } from '../../types';
 import { storeCustomerId } from '../../app/api/auth';
-
-const { width, height } = Dimensions.get('window');
 
 type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
@@ -40,6 +38,10 @@ const Login: React.FC = () => {
     }
   }, [error]);
 
+  const handleCatchError = (err: any) => {
+    console.error('Auth error:', err);
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       Toast.show({
@@ -49,7 +51,7 @@ const Login: React.FC = () => {
         position: 'top',
         visibilityTime: 2000,
       });
-      navigation.navigate('Main' as any);
+      navigation.goBack();
     }
   }, [isAuthenticated, navigation]);
 
@@ -129,12 +131,12 @@ const Login: React.FC = () => {
       });
 
       dispatch({ type: GET_USER_REQUEST });
-    } catch (error: any) {
-      console.error('Google auth error:', error);
+    } catch (authError: any) {
+      handleCatchError(authError);
       Toast.show({
         type: 'error',
         text1: 'Authentication Failed',
-        text2: error.message || 'Could not authenticate with backend',
+        text2: authError.message || 'Could not authenticate with backend',
         position: 'top',
         visibilityTime: 3000,
       });

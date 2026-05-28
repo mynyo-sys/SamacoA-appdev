@@ -35,7 +35,6 @@ export const _signInWithGoogle = async () => {
       };
     }
 
-    const { user } = response.data;
     let idToken = response.data.idToken;
 
     if (!idToken) {
@@ -87,7 +86,7 @@ export const _signInWithGoogle = async () => {
 
     console.log('[GOOGLE_SIGNIN] Parsed data:', data);
 
-    if (!backendResponse.ok || !data.success || !data.token) {
+    if (!data.success || !data.token) {
       return {
         success: false,
         user: null,
@@ -102,13 +101,13 @@ export const _signInWithGoogle = async () => {
       token: data.token,
       error: null,
     };
-  } catch (error: any) {
-    console.log('[GOOGLE_SIGNIN] Error:', error);
+  } catch (authErr: any) {
+    console.log('[GOOGLE_SIGNIN] Error:', authErr);
     return {
       success: false,
       user: null,
       token: null,
-      error: error?.message || 'Google sign in failed',
+      error: authErr?.message || 'Google sign in failed',
     };
   }
 };

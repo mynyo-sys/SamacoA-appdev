@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, View, TextInput, type ViewStyle, type TextStyle, type KeyboardTypeOptions } from 'react-native';
+import { Text, View, TextInput, StyleSheet, type ViewStyle, type TextStyle, type KeyboardTypeOptions } from 'react-native';
 
 interface CustomTextInputProps {
   label?: string;
@@ -12,6 +12,16 @@ interface CustomTextInputProps {
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 }
+
+const styles = StyleSheet.create({
+  label: {
+    fontWeight: 'bold',
+  },
+  input: {
+    width: '100%',
+    borderBottomWidth: 1,
+  },
+});
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({
   label,
@@ -26,7 +36,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
 }) => {
   return (
     <View style={containerStyle}>
-      <Text style={{ fontWeight: 'bold' }}>{label}</Text>
+      <Text style={styles.label}>{label}</Text>
       <TextInput
         placeholder={placeholder}
         value={value}
@@ -36,10 +46,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
         autoCapitalize={autoCapitalize}
         style={[
           textStyle,
-          {
-            width: '100%',
-            borderBottomWidth: 1,
-          },
+          styles.input,
         ]}
       />
     </View>

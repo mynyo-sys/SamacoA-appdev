@@ -41,13 +41,6 @@ export interface Customer {
   address?: string;
 }
 
-// API Response wrapper
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
 // Helper function for API calls
 const apiCall = async <T>(
   endpoint: string,
@@ -61,7 +54,7 @@ const apiCall = async <T>(
     };
 
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -195,7 +188,7 @@ const normalizeOrder = (raw: RawOrder): Order => ({
   customer: {
     id: raw.customer?.id ?? 0,
     email: raw.customer?.email ?? '',
-    fullName: raw.customer?.fullName ?? raw.customer?.name ?? 'Customer',
+    fullName: raw.customer?.fullName ?? raw.customer?.email ?? 'Customer',
   },
   items: (raw.items ?? []).map((item, index) => ({
     id: item.id ?? index,
@@ -240,7 +233,7 @@ export const ordersApi = {
   },
 
   cancel: async (id: number): Promise<Order> => {
-    return apiCall<Order>(`/orders/${id}/cancel`, {
+    return apiCall<Order>(`/api/orders/${id}/cancel`, {
       method: 'PATCH',
     });
   },

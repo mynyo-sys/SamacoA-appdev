@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "673892684199-eqlsjl5dvqnkheq78dabu23p50tlb7dn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.samaco",
+            "certificate_hash": "3f6be3a7c5df0d63354ea301c70e224dbf632049"
+          }
+        },
+        {
           "client_id": "673892684199-nst00pa8gb9tchpfk9e9detnh1btfep2.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

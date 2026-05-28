@@ -18,11 +18,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
 import Toast from 'react-native-toast-message';
 import { productsApi, type Product } from '../app/api/brewery';
-import { addToCart } from '../utils/cartStorage';
+import { addToCart, getCartItemCount } from '../utils/cartStorage';
 import type { RootState } from '../app/reducers';
 import { ROUTES, type MainStackParamList } from '../types';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 type ProductsScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Products'>;
 
@@ -36,16 +36,39 @@ const ProductsScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [addingToCart, setAddingToCart] = useState<boolean>(false);
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
   const navigation = useNavigation<ProductsScreenNavigationProp>();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
+  const filterProducts = React.useCallback(() => {
+    let filtered = Array.isArray(products) ? [...products] : [];
+
+    if (searchQuery) {
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(p => p.category === selectedCategory);
+    }
+
+    setFilteredProducts(filtered);
+  }, [searchQuery, selectedCategory, products]);
+
   useEffect(() => {
     loadProducts();
+    loadCartCount();
   }, []);
 
   useEffect(() => {
     filterProducts();
-  }, [searchQuery, selectedCategory, products]);
+  }, [filterProducts]);
+
+  const loadCartCount = async () => {
+    const count = await getCartItemCount();
+    setCartItemCount(count);
+  };
 
   const loadProducts = async () => {
     try {
@@ -81,26 +104,24 @@ const ProductsScreen: React.FC = () => {
       setAddingToCart(true);
 
       await addToCart(selectedProduct, 1);
-
-      const updatedProducts = products.map(p => 
-        p.id === selectedProduct.id 
-          ? { ...p, stock: Math.max(0, p.stock - 1) }
-          : p
-      );
-      setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      
+      // Update cart count
+      const newCount = await getCartItemCount();
+      setCartItemCount(newCount);
 
       Toast.show({
         type: 'success',
         text1: 'Added to Cart',
         text2: `${selectedProduct.name} added to your cart`,
         position: 'top',
-        visibilityTime: 2500,
+        visibilityTime: 2000,
       });
 
       setModalVisible(false);
       setSelectedProduct(null);
-      navigation.navigate(ROUTES.ORDERS);
+      
+      // Don't auto-navigate - let user continue shopping
+      
     } catch (err: any) {
       Toast.show({
         type: 'error',
@@ -115,25 +136,34 @@ const ProductsScreen: React.FC = () => {
     }
   };
 
-  const filterProducts = () => {
-    let filtered = Array.isArray(products) ? [...products] : [];
-
-    if (searchQuery) {
-      filtered = filtered.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const handleViewCart = () => {
+    if (cartItemCount === 0) {
+      Toast.show({
+        type: 'info',
+        text1: 'Cart is Empty',
+        text2: 'Add some products to your cart first',
+        position: 'top',
+        visibilityTime: 2000,
+      });
+      return;
     }
-
-    if (selectedCategory !== 'All') {
-      filtered = filtered.filter(p => p.category === selectedCategory);
-    }
-
-    setFilteredProducts(filtered);
+    navigation.navigate(ROUTES.CART as any);
   };
 
   const categories = ['All', 'Local Craft Beers', 'Imported Beers', 'Filipino Lagers', 'Seasonal Specials', 'Non-Alcoholic'];
 
-  const renderProduct = ({ item }: { item: Product }) => (
+  const renderEmptyList = React.useCallback(
+    () => (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyEmoji}>😢</Text>
+        <Text style={styles.emptyText}>No products found</Text>
+        <Text style={styles.emptySubtext}>Try adjusting your search</Text>
+      </View>
+    ),
+    []
+  );
+
+  const renderProduct = React.useCallback(({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => {
@@ -175,7 +205,7 @@ const ProductsScreen: React.FC = () => {
         </View>
       </View>
     </TouchableOpacity>
-  );
+  ), []);
 
   if (loading) {
     return (
@@ -207,7 +237,14 @@ const ProductsScreen: React.FC = () => {
               <Text style={styles.backButtonText}>←</Text>
             </TouchableOpacity>
             <Text style={styles.headerTitle}>🍺 Our Products</Text>
-            <View style={styles.placeholder} />
+            <TouchableOpacity onPress={handleViewCart} style={styles.cartButton}>
+              <Text style={styles.cartIcon}>🛒</Text>
+              {cartItemCount > 0 && (
+                <View style={styles.cartBadge}>
+                  <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
           <Text style={styles.headerSubtitle}>Browse our selection of craft beers</Text>
         </View>
@@ -230,7 +267,7 @@ const ProductsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Categories Horizontal Scroll - Fixed */}
+        {/* Categories Horizontal Scroll */}
         <View style={styles.categoriesWrapper}>
           <FlatList
             horizontal
@@ -251,7 +288,7 @@ const ProductsScreen: React.FC = () => {
           />
         </View>
 
-        {/* Products Grid - Fixed with proper height */}
+        {/* Products Grid */}
         <FlatList
           data={filteredProducts}
           renderItem={renderProduct}
@@ -260,13 +297,7 @@ const ProductsScreen: React.FC = () => {
           numColumns={2}
           columnWrapperStyle={styles.row}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyEmoji}>😢</Text>
-              <Text style={styles.emptyText}>No products found</Text>
-              <Text style={styles.emptySubtext}>Try adjusting your search</Text>
-            </View>
-          )}
+          ListEmptyComponent={renderEmptyList}
         />
       </View>
 
@@ -349,6 +380,35 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 24,
     color: '#FFD700',
+  },
+  cartButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  cartIcon: {
+    fontSize: 20,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  cartBadgeText: {
+    fontSize: 10,
+    color: '#fff',
+    fontWeight: 'bold',
   },
   placeholder: {
     width: 40,

@@ -76,6 +76,8 @@ export type MainStackParamList = {
   Profile: undefined;
   Products: undefined;
   Orders: undefined;
+  Cart: undefined;
+  Auth: { screen: 'Login' | 'Register' };
 };
 
 // ========== COMPONENT PROP TYPES ==========
@@ -102,12 +104,15 @@ export interface CustomTextInputProps {
 
 // ========== ROUTES ==========
 export const ROUTES = {
+  AUTH: 'Auth',
+  MAIN: 'Main',
   LOGIN: 'Login',
   REGISTER: 'Register',
   HOME: 'Home',
   PROFILE: 'Profile',
   PRODUCTS: 'Products',
   ORDERS: 'Orders',
+  CART: 'Cart',
 } as const;
 
 export type RouteName = typeof ROUTES[keyof typeof ROUTES];
