@@ -19,7 +19,15 @@ const App: React.FC = () => {
     const initializeFCM = async () => {
       try {
         console.log('[App] Initializing FCM...');
-        await pushNotificationService.requestUserPermission();
+        const token = await pushNotificationService.requestUserPermission();
+
+        // Register token with backend
+        if (token) {
+          pushNotificationService.registerTokenWithBackend(
+            'https://webdev2-staging.up.railway.app',
+            ''
+          );
+        }
 
         // Listen to foreground messages
         pushNotificationService.listenToForegroundMessages(remoteMessage => {
@@ -47,6 +55,10 @@ const App: React.FC = () => {
         pushNotificationService.listenToTokenRefresh(token => {
           console.log('[App] FCM token refreshed:', token);
           // Re-register with backend if needed
+          pushNotificationService.registerTokenWithBackend(
+            'https://webdev2-staging.up.railway.app',
+            ''
+          );
         });
       } catch (error) {
         console.error('[App] FCM initialization error:', error);
