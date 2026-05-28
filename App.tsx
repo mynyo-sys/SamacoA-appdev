@@ -23,10 +23,14 @@ const App: React.FC = () => {
 
         // Register token with backend
         if (token) {
-          pushNotificationService.registerTokenWithBackend(
-            'https://webdev2-staging.up.railway.app',
-            ''
-          );
+          const state = store.getState();
+          const email = state.auth?.user?.email || '';
+          if (email) {
+            pushNotificationService.registerTokenWithBackend(
+              'https://webdev2-staging.up.railway.app',
+              email
+            );
+          }
         }
 
         // Listen to foreground messages
@@ -62,10 +66,14 @@ const App: React.FC = () => {
         pushNotificationService.listenToTokenRefresh(token => {
           console.log('[App] FCM token refreshed:', token);
           // Re-register with backend if needed
-          pushNotificationService.registerTokenWithBackend(
-            'https://webdev2-staging.up.railway.app',
-            ''
-          );
+          const currentState = store.getState();
+          const email = currentState.auth?.user?.email || '';
+          if (email) {
+            pushNotificationService.registerTokenWithBackend(
+              'https://webdev2-staging.up.railway.app',
+              email
+            );
+          }
         });
       } catch (error) {
         console.error('[App] FCM initialization error:', error);

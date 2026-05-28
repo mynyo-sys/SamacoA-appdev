@@ -122,11 +122,16 @@ class PushNotificationService {
   }
 
   // Send FCM token to backend
-  async registerTokenWithBackend(backendUrl: string, authToken: string) {
+  async registerTokenWithBackend(backendUrl: string, email: string) {
     try {
       const token = await this.getFCMToken();
       if (!token) {
         console.log('[FCM] No token available');
+        return;
+      }
+
+      if (!email) {
+        console.log('[FCM] No email provided');
         return;
       }
 
@@ -136,7 +141,7 @@ class PushNotificationService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ token, email }),
       });
 
       if (response.ok) {
