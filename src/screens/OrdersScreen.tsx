@@ -24,13 +24,6 @@ const OrdersScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       loadOrders();
-
-      // Poll for order status updates every 10 seconds
-      const interval = setInterval(() => {
-        loadOrders();
-      }, 10000);
-
-      return () => clearInterval(interval);
     }, [])
   );
 
