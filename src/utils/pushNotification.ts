@@ -131,19 +131,18 @@ class PushNotificationService {
       }
 
       console.log('[FCM] Registering token with backend...');
-      const response = await fetch(`${backendUrl}/api/user/fcm-token`, {
+      const response = await fetch(`${backendUrl}/api/fcm/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify({ fcmToken: token }),
+        body: JSON.stringify({ token }),
       });
 
       if (response.ok) {
         console.log('[FCM] Token registered successfully');
       } else {
-        console.error('[FCM] Failed to register token');
+        console.error('[FCM] Failed to register token:', response.status);
       }
     } catch (error) {
       console.error('[FCM] Register token error:', error);
