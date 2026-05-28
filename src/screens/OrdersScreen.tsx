@@ -6,15 +6,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  Dimensions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
-
-const { width } = Dimensions.get('window');
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -24,9 +21,18 @@ const OrdersScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<OrdersScreenNavigationProp>();
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadOrders();
+
+      // Poll for order status updates every 10 seconds
+      const interval = setInterval(() => {
+        loadOrders();
+      }, 10000);
+
+      return () => clearInterval(interval);
+    }, [])
+  );
 
   const loadOrders = async () => {
     try {
@@ -345,6 +351,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9CA3AF',
     marginTop: 4,
+  },
+  noItems: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    fontStyle: 'italic',
   },
   orderFooter: {
     flexDirection: 'row',
