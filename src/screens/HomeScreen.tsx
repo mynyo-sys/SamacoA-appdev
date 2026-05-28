@@ -669,17 +669,19 @@ const styles = StyleSheet.create({
   },
   actionGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
     gap: 12,
   },
   actionCard: {
-    flex: 1,
+    width: '48%',
     backgroundColor: '#1F2937',
     borderRadius: 16,
     padding: 16,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,215,0,0.15)',
+    marginBottom: 12,
   },
   actionIconContainer: {
     width: 60,

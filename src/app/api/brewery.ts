@@ -46,6 +46,7 @@ const apiCall = async <T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> => {
+  console.log('[API CALL] Request:', options.method || 'GET', endpoint);
   try {
     const token = await getAuthToken();
     const headers: Record<string, string> = {
@@ -62,6 +63,7 @@ const apiCall = async <T>(
       headers,
     });
 
+    console.log('[API CALL] Response status:', response.status);
     const responseText = await response.text();
     let data: any;
 
@@ -79,9 +81,11 @@ const apiCall = async <T>(
         data?.message ||
         (typeof data?.detail === 'string' ? data.detail : null) ||
         `${response.status} ${response.statusText}`;
+      console.error('[API CALL] Error:', endpoint, errorMessage);
       throw new Error(errorMessage);
     }
 
+    console.log('[API CALL] Success:', endpoint);
     return data;
   } catch (error) {
     console.error(`API Error [${endpoint}]:`, error);

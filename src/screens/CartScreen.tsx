@@ -132,9 +132,11 @@ const CartScreen: React.FC = () => {
           style: 'default',
           onPress: async () => {
             try {
+              console.log('[CART SCREEN] Placing order for user:', user.email);
               setCheckingOut(true);
               const newOrder = await createOrderFromCart(user.email);
-              
+              console.log('[CART SCREEN] Order created successfully:', newOrder.id);
+
               Toast.show({
                 type: 'success',
                 text1: 'Order Placed!',
@@ -142,10 +144,10 @@ const CartScreen: React.FC = () => {
                 position: 'top',
                 visibilityTime: 3000,
               });
-              
+
               navigation.navigate(ROUTES.ORDERS);
             } catch (error: any) {
-              console.error('[CART] Checkout error:', error);
+              console.error('[CART SCREEN] Checkout error:', error);
               Toast.show({
                 type: 'error',
                 text1: 'Checkout Failed',

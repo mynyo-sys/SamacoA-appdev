@@ -32,21 +32,25 @@ const OrdersScreen: React.FC = () => {
 
   const loadOrders = async () => {
     try {
+      console.log('[ORDERS SCREEN] Loading orders...');
       setLoading(true);
       setError(null);
       const data = await ordersApi.getAll();
+      console.log('[ORDERS SCREEN] Orders loaded:', data.length, 'orders');
       setOrders(data);
     } catch (err: any) {
       setError(err.message || 'Failed to load orders');
-      console.error('[ORDERS] Error:', err);
+      console.error('[ORDERS SCREEN] Error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCancelOrder = async (orderId: number) => {
+    console.log('[ORDERS SCREEN] Cancelling order:', orderId);
     try {
       await ordersApi.cancel(orderId, email);
+      console.log('[ORDERS SCREEN] Order cancelled successfully');
       Toast.show({
         type: 'success',
         text1: 'Order Cancelled',
@@ -56,6 +60,7 @@ const OrdersScreen: React.FC = () => {
       });
       loadOrders();
     } catch (err: any) {
+      console.error('[ORDERS SCREEN] Cancel error:', err);
       Toast.show({
         type: 'error',
         text1: 'Cancellation Failed',
