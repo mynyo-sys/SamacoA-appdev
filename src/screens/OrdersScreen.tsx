@@ -166,11 +166,13 @@ const OrdersScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Text style={styles.backButtonText}>←</Text>
+          <TouchableOpacity onPress={() => navigation.navigate(ROUTES.HOME)} style={styles.backButton}>
+            <Text style={styles.backButtonText}>🏠</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>📦 My Orders</Text>
-          <View style={styles.placeholder} />
+          <TouchableOpacity onPress={() => navigation.navigate(ROUTES.CART)} style={styles.cartButton}>
+            <Text style={styles.cartButtonText}>🛒</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.headerSubtitle}>Order history</Text>
       </View>
@@ -228,11 +230,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   backButtonText: {
-    fontSize: 24,
-    color: '#FFD700',
+    fontSize: 20,
   },
-  placeholder: {
+  cartButton: {
     width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,215,0,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartButtonText: {
+    fontSize: 20,
   },
   headerTitle: {
     fontSize: 28,
