@@ -39,6 +39,13 @@ const App: React.FC = () => {
             text2: remoteMessage.notification?.body || '',
             position: 'top',
           });
+
+          // Refresh orders if it's an order status update
+          if (remoteMessage.data?.type === 'order_status') {
+            console.log('[App] Order status changed, refreshing orders...');
+            // Dispatch action to refresh orders
+            store.dispatch({ type: 'REFRESH_ORDERS' });
+          }
         });
 
         // Listen to notification opens
