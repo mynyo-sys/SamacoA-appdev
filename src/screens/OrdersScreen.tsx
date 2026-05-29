@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
 import type { RootState } from '../app/reducers';
+import { io, Socket } from 'socket.io-client';
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -28,16 +29,29 @@ const OrdersScreen: React.FC = () => {
     React.useCallback(() => {
       loadOrders();
       
-      // Set up polling for seamless order updates (commented out)
-      /*
-      const interval = setInterval(() => {
+      // Set up Socket.io for real-time order updates
+      const socket = io('https://brewery-socketio-production.up.railway.app');
+      
+      socket.on('connect', () => {
+        console.log('[SOCKETIO] Connected to server');
+      });
+      
+      socket.on('order_update', (data: any) => {
+        console.log('[SOCKETIO] Order updated:', data);
         loadOrders();
-      }, 10000); // Poll every 10 seconds
+      });
+      
+      socket.on('disconnect', () => {
+        console.log('[SOCKETIO] Disconnected from server');
+      });
+      
+      socket.on('connect_error', (error: any) => {
+        console.error('[SOCKETIO] Connection error:', error);
+      });
 
       return () => {
-        clearInterval(interval);
+        socket.disconnect();
       };
-      */
     }, [])
   );
 
