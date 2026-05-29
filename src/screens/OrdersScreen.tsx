@@ -28,7 +28,8 @@ const OrdersScreen: React.FC = () => {
     React.useCallback(() => {
       loadOrders();
       
-      // Set up polling for seamless order updates
+      // Set up polling for seamless order updates (commented out)
+      /*
       const interval = setInterval(() => {
         loadOrders();
       }, 10000); // Poll every 10 seconds
@@ -36,6 +37,7 @@ const OrdersScreen: React.FC = () => {
       return () => {
         clearInterval(interval);
       };
+      */
     }, [])
   );
 
