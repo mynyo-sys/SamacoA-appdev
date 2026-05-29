@@ -30,10 +30,17 @@ const OrdersScreen: React.FC = () => {
       loadOrders();
       
       // Set up Socket.io for real-time order updates
-      const socket = io('https://brewery-socketio-production.up.railway.app');
+      const socketUrl = 'https://brewery-socketio-production.up.railway.app';
+      console.log('[SOCKETIO] Connecting to:', socketUrl);
+      const socket = io(socketUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000
+      });
       
       socket.on('connect', () => {
-        console.log('[SOCKETIO] Connected to server');
+        console.log('[SOCKETIO] Connected to server - Socket ID:', socket.id);
       });
       
       socket.on('order_update', (data: any) => {
@@ -41,15 +48,24 @@ const OrdersScreen: React.FC = () => {
         loadOrders();
       });
       
-      socket.on('disconnect', () => {
-        console.log('[SOCKETIO] Disconnected from server');
+      socket.on('disconnect', (reason: any) => {
+        console.log('[SOCKETIO] Disconnected from server - Reason:', reason);
       });
       
       socket.on('connect_error', (error: any) => {
         console.error('[SOCKETIO] Connection error:', error);
       });
+      
+      socket.on('reconnect', (attemptNumber: any) => {
+        console.log('[SOCKETIO] Reconnected after', attemptNumber, 'attempts');
+      });
+      
+      socket.on('reconnect_attempt', (attemptNumber: any) => {
+        console.log('[SOCKETIO] Reconnection attempt:', attemptNumber);
+      });
 
       return () => {
+        console.log('[SOCKETIO] Disconnecting socket');
         socket.disconnect();
       };
     }, [])
