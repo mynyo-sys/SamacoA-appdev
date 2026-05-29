@@ -27,13 +27,25 @@ const OrdersScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       loadOrders();
+      
+      // Set up polling for seamless order updates
+      const interval = setInterval(() => {
+        loadOrders();
+      }, 10000); // Poll every 10 seconds
+
+      return () => {
+        clearInterval(interval);
+      };
     }, [])
   );
 
   const loadOrders = async () => {
     try {
       console.log('[ORDERS SCREEN] Loading orders...');
-      setLoading(true);
+      // Only show loading on initial load, not on polling updates
+      if (orders.length === 0) {
+        setLoading(true);
+      }
       setError(null);
       const data = await ordersApi.getAll();
       console.log('[ORDERS SCREEN] Orders loaded:', data.length, 'orders');
