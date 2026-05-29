@@ -14,6 +14,7 @@ import { useSelector } from 'react-redux';
 import { ordersApi, type Order } from '../app/api/brewery';
 import { ROUTES, type MainStackParamList } from '../types';
 import type { RootState } from '../app/reducers';
+import websocketService from '../utils/websocket';
 
 type OrdersScreenNavigationProp = NativeStackNavigationProp<MainStackParamList, 'Orders'>;
 
@@ -27,6 +28,14 @@ const OrdersScreen: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       loadOrders();
+      
+      // Connect to WebSocket
+      const wsUrl = 'ws://webdev2-staging.up.railway.app:8080';
+      websocketService.connect(wsUrl);
+      
+      return () => {
+        websocketService.disconnect();
+      };
     }, [])
   );
 
